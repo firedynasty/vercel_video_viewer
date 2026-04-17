@@ -1,0 +1,7 @@
+To add a new topic (e.g., "fitness"):
+
+1. Create playlists_fitness/ with .txt files containing video URLs
+2. Copy any existing HTML to public/fitness.html
+3. Add { name: 'Fitness', file: 'fitness.html' } to the TOPICS array in all HTML files
+4. Add a rewrite in vercel.json: { "source": "/fitness", "destination": "/fitness.html" }
+5. Run python3 generate_playlists.py
