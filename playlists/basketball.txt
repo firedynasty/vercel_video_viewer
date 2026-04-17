@@ -1,0 +1,3 @@
+# Basketball clips
+stepback, https://example.com/videos/stepback.mp4
+crossover, https://example.com/videos/crossover.mp4
