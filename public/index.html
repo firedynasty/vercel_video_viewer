@@ -29,7 +29,7 @@ body {
     padding: 0 16px;
     border-bottom: 3px solid #B71C1C;
     box-shadow: 0 2px 15px rgba(0,0,0,0.5);
-    overflow-x: auto;
+    overflow: visible;
 }
 .nav-title {
     color: #ef9a9a;
@@ -74,6 +74,9 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
     display: flex;
     gap: 6px;
     align-items: center;
+    overflow-x: auto;
+    flex: 1;
+    min-width: 0;
 }
 .nav-cat-btn {
     background: linear-gradient(45deg, #43A047, #66BB6A);
