@@ -1045,7 +1045,7 @@ function selectCategory(cat) {
 
 async function initPlaylists() {
     var params = new URLSearchParams(window.location.search);
-    var jsonUrl = params.get('json') || 'https://www.dropbox.com/scl/fi/h5pxdkygvimjbu8qwrd0k/playlists.json?rlkey=3vm19hi0k1xfaf05e9j9x3zn3&st=im4clz2f&raw=1';
+    var jsonUrl = params.get('json') || 'https://dl.dropboxusercontent.com/scl/fi/h5pxdkygvimjbu8qwrd0k/playlists.json?rlkey=3vm19hi0k1xfaf05e9j9x3zn3&st=im4clz2f';
     try {
         var res = await fetch(jsonUrl);
         if (!res.ok) throw new Error('HTTP ' + res.status);
