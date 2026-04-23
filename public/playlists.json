@@ -79,6 +79,54 @@
       "url": "https://www.youtube.com/shorts/tHhqSvtLAmQ"
     },
     {
+      "name": "fade-away",
+      "url": "https://www.youtube.com/watch?v=77tAMve11vk"
+    },
+    {
+      "name": "fade-away-short",
+      "url": "https://www.youtube.com/shorts/qagyfGfPgPA"
+    },
+    {
+      "name": "dirk-fade",
+      "url": "https://www.youtube.com/shorts/BVGmjMcghGI"
+    },
+    {
+      "name": "drive-to-spin",
+      "url": "https://www.youtube.com/shorts/XtXiJKHgeUs"
+    },
+    {
+      "name": "foot-work",
+      "url": "https://www.youtube.com/shorts/RiW8eOy7P08"
+    },
+    {
+      "name": "shimmy-fade",
+      "url": "https://www.youtube.com/shorts/6VAJI1nF6kw"
+    },
+    {
+      "name": "hesi-change-velocity",
+      "url": "https://www.youtube.com/shorts/ZM-ek6FNuPk"
+    },
+    {
+      "name": "velocity",
+      "url": "https://www.youtube.com/shorts/dmRNjpnKNQw"
+    },
+    {
+      "name": "fast-slow-drills",
+      "url": "https://www.youtube.com/shorts/XboEEjBwCMY"
+    },
+    {
+      "name": "slow-down-here-quick",
+      "url": "https://www.youtube.com/shorts/B-L_PHMXm8Y"
+    },
+    {
+      "name": "change-pace-go-see-the-shorts-at-youtube",
+      "url": "https://www.youtube.com/watch?v=Jkk-eDqYbWw"
+    },
+    {
+      "name": "shooting-coach-Mike",
+      "url": "https://www.youtube.com/watch?v=EoQu1XJfEb8"
+    },
+    {
       "name": "getting-shifty",
       "url": "https://www.youtube.com/watch?v=FZImMPkDK3Q",
       "times": [
@@ -165,18 +213,74 @@
       ]
     },
     {
+      "name": "pick-the-play",
+      "url": "https://www.youtube.com/watch?v=j16FCb3BbDs&t=155s"
+    },
+    {
+      "name": "against-pyhysical-defender",
+      "url": "https://www.youtube.com/watch?v=QJdHoI7VO9E"
+    },
+    {
+      "name": "nba-how-to",
+      "url": "https://www.youtube.com/watch?v=e7sWXixI77M&t=97s"
+    },
+    {
+      "name": "manipulate-the-ball",
+      "url": "https://www.youtube.com/shorts/oo594Kzt41A"
+    },
+    {
+      "name": "dribbline-drills",
+      "url": "https://www.youtube.com/watch?v=loraMUWKteA"
+    },
+    {
       "name": "highlight-shot-floater",
-      "url": "https://www.youtube.com/watch?v=13NB4zcVTA8",
+      "url": "https://www.youtube.com/watch?v=13NB4zcVTA8?4:18(floater)",
       "times": [
-        {
-          "time": "4:18",
-          "label": "floater"
-        },
         {
           "time": "4:31",
           "label": "three point shot"
         }
       ]
+    },
+    {
+      "name": "passing",
+      "url": "https://www.youtube.com/watch?v=-WRHRhWdsko"
+    },
+    {
+      "name": "change-direction",
+      "url": "https://www.youtube.com/watch?v=Coim-2LzADI"
+    },
+    {
+      "name": "basic-dribbling",
+      "url": "https://www.youtube.com/watch?v=vR0e6jztDIg"
+    },
+    {
+      "name": "pound-dribble-then-quick",
+      "url": "https://www.youtube.com/watch?v=NNaj3GGLM0Q"
+    },
+    {
+      "name": "pushoff-toshot",
+      "url": "https://www.youtube.com/shorts/R5VA2APUY6o"
+    },
+    {
+      "name": "spins eal",
+      "url": "https://www.youtube.com/shorts/IevpBe7PZnQ"
+    },
+    {
+      "name": "wide-base",
+      "url": "https://www.youtube.com/shorts/32tT-NjdmLM"
+    },
+    {
+      "name": "beating-defense",
+      "url": "https://www.youtube.com/shorts/38fnNC0PFlY"
+    },
+    {
+      "name": "defense",
+      "url": "https://www.youtube.com/shorts/6yXSKocO82Y"
+    },
+    {
+      "name": "wall-up-d",
+      "url": "https://www.youtube.com/shorts/IPyNQ7z_CLM"
     }
   ]
 }
