@@ -196,6 +196,7 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
     background: rgba(0,0,0,0.5); display: flex; align-items: center;
     justify-content: center; z-index: 5; opacity: 0;
     pointer-events: none; transition: opacity 0.3s;
+    flex-direction: column; gap: 12px;
 }
 .loading-overlay.visible { opacity: 1; }
 .spinner {
@@ -205,6 +206,23 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
     animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { color: #ccc; font-size: 0.85rem; }
+
+/* Buffer progress bar */
+.buffer-bar-container {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 4px; background: rgba(255,255,255,0.15); z-index: 6;
+    transition: opacity 0.3s;
+}
+.buffer-bar-container.hidden { opacity: 0; }
+.buffer-bar-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #B71C1C, #ef5350);
+    transition: width 0.3s ease;
+    border-radius: 0 2px 2px 0;
+}
+.buffer-bar-container:hover { height: 6px; }
+.buffer-bar-container:hover .buffer-bar-fill { border-radius: 0 3px 3px 0; }
 .empty-state { text-align: center; color: #666; padding: 60px 20px; }
 .empty-state h2 { font-size: 1.5rem; color: #888; margin-bottom: 10px; }
 .empty-state p { font-size: 0.95rem; }
@@ -369,10 +387,16 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
                     CSV format: title,url &nbsp;or&nbsp; url (name auto-extracted from filename).
                 </p>
             </div>
-            <video id="mainVideo" class="main-video" controls preload="auto" style="display:none;">
+            <video id="mainVideo" class="main-video" controls preload="none" style="display:none;">
                 Your browser does not support the video tag.
             </video>
-            <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="spinner"></div>
+                <div class="loading-text" id="loadingText">Loading video...</div>
+            </div>
+            <div class="buffer-bar-container hidden" id="bufferBar">
+                <div class="buffer-bar-fill" id="bufferBarFill"></div>
+            </div>
             <button class="nav-arrow prev-btn" id="prevBtn" style="display:none;">&#8249;</button>
             <button class="nav-arrow next-btn" id="nextBtn" style="display:none;">&#8250;</button>
             <div class="video-counter" id="videoCounter" style="display:none;"></div>
@@ -884,9 +908,57 @@ async function loadVideo(index) {
     if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 }
 
-mainVideo.addEventListener('canplay', function() { loadingOverlay.classList.remove('visible'); });
+var bufferBar = document.getElementById('bufferBar');
+var bufferBarFill = document.getElementById('bufferBarFill');
+var loadingText = document.getElementById('loadingText');
+
+function updateBufferBar() {
+    if (!mainVideo.duration || !mainVideo.buffered.length) return;
+    // Find the buffer range that contains the current playback position
+    var bufferedEnd = 0;
+    for (var i = 0; i < mainVideo.buffered.length; i++) {
+        if (mainVideo.buffered.start(i) <= mainVideo.currentTime) {
+            bufferedEnd = mainVideo.buffered.end(i);
+        }
+    }
+    var pct = (bufferedEnd / mainVideo.duration) * 100;
+    bufferBarFill.style.width = pct + '%';
+    bufferBar.classList.remove('hidden');
+
+    // Update loading text with percentage while overlay is visible
+    if (loadingOverlay.classList.contains('visible')) {
+        loadingText.textContent = 'Buffering... ' + Math.round(pct) + '%';
+    }
+}
+
+mainVideo.addEventListener('loadstart', function() {
+    loadingText.textContent = 'Loading video...';
+    bufferBarFill.style.width = '0%';
+    bufferBar.classList.remove('hidden');
+});
+
+mainVideo.addEventListener('progress', updateBufferBar);
+
+mainVideo.addEventListener('canplay', function() {
+    loadingOverlay.classList.remove('visible');
+    updateBufferBar();
+});
+
+mainVideo.addEventListener('waiting', function() {
+    loadingOverlay.classList.add('visible');
+    loadingText.textContent = 'Buffering...';
+    updateBufferBar();
+});
+
+mainVideo.addEventListener('playing', function() {
+    loadingOverlay.classList.remove('visible');
+});
+
+mainVideo.addEventListener('timeupdate', updateBufferBar);
+
 mainVideo.addEventListener('error', function() {
     loadingOverlay.classList.remove('visible');
+    bufferBar.classList.add('hidden');
     if (videos[currentIndex]) videoTitle.textContent = videos[currentIndex].title + ' (failed to load)';
 });
 
