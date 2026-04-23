@@ -352,7 +352,7 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 <!-- Navbar -->
 <div class="top-navbar">
     <span class="nav-title" id="navTitle">Video Viewer</span>
-    <div class="nav-dropdown" id="topicDropdown">
+    <div class="nav-dropdown" id="topicDropdown" style="display:none;">
         <button class="nav-btn-pill nav-dropdown-btn" onclick="toggleTopicDropdown()">Topics ▾</button>
         <div class="nav-dropdown-menu" id="topicMenu"></div>
     </div>
@@ -406,6 +406,7 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
                 <button class="ctrl-btn" id="muteBtn">Mute</button>
                 <button class="ctrl-btn" id="loopBtn">Repeat</button>
                 <button class="ctrl-btn" id="fullscreenBtn">Fullscreen</button>
+                <button class="ctrl-btn" id="speedBtn">1x</button>
             </div>
         </div>
         <div class="thumbnail-strip" id="thumbnailStrip"></div>
@@ -985,6 +986,18 @@ function toggleLoop() {
 function toggleFullscreen() {
     if (document.fullscreenElement) document.exitFullscreen(); else mainVideo.requestFullscreen();
 }
+function toggleSpeed() {
+    var btn = document.getElementById('speedBtn');
+    if (mainVideo.playbackRate === 1) {
+        mainVideo.playbackRate = 0.5;
+        btn.textContent = '0.5x';
+        btn.classList.add('active-loop');
+    } else {
+        mainVideo.playbackRate = 1;
+        btn.textContent = '1x';
+        btn.classList.remove('active-loop');
+    }
+}
 
 prevBtn.addEventListener('click', prevVideo);
 nextBtn.addEventListener('click', nextVideo);
@@ -992,6 +1005,7 @@ playPauseBtn.addEventListener('click', togglePlayPause);
 muteBtn.addEventListener('click', toggleMute);
 loopBtn.addEventListener('click', toggleLoop);
 fullscreenBtn.addEventListener('click', toggleFullscreen);
+document.getElementById('speedBtn').addEventListener('click', toggleSpeed);
 mainVideo.addEventListener('click', togglePlayPause);
 
 document.addEventListener('keydown', function(e) {
