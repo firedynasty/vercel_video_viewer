@@ -921,9 +921,11 @@ async function loadVideo(index) {
             events: {
                 onReady: function() {
                     loadingOverlay.classList.remove('visible');
-                    // Apply current speed setting
+                    // Apply persisted speed setting
                     var speedBtn = document.getElementById('speedBtn');
                     ytPlayer.setPlaybackRate(speedBtn.textContent === '0.5x' ? 0.5 : 1);
+                    // Apply persisted mute setting
+                    if (muteBtn.textContent === 'Unmute') ytPlayer.mute(); else ytPlayer.unMute();
                 }
             }
         });
