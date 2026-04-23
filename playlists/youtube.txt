@@ -2,3 +2,5 @@ stepback,https://www.youtube.com/shorts/AvAH3N6RXxw
 curry-3,https://www.youtube.com/watch?v=G_5n8myDG2o
 white-side-three,https://www.youtube.com/watch?v=-DJ84qhxtBc
 highlight,https://www.youtube.com/shorts/tHhqSvtLAmQ
+getting-shifty,"https://www.youtube.com/watch?v=FZImMPkDK3Q,0:07,0:18,0:21,0:36,0:57,1:01,1:05, 1:11, 1:13(turn_around_back_and_forth),1:15(forward_to_backwards),1:22(snatch), 1:30(cross_overs), 1:37(hesi_to_shot), 2:09(drive-step-back),3:02 (snatch), 3:15(drop-to-pull-back), 5:01(counter), 5:08(dribble to behind the back counter), 5:12(reach and I will teach), 5:14(got eh counter straight wing), 5:16(Paul spin -- left hand in then spin -- shoulder to the left then back), 5:22(perfect-snatch),in basketball always cross against the side you are going especially I'm by the free throw, when someone is in front you can always,"
+highlight-shot-floater,"https://www.youtube.com/watch?v=13NB4zcVTA8,4:18(floater),4:31(three point shot)"

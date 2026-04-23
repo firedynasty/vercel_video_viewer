@@ -14,6 +14,7 @@ import argparse
 import glob
 import json
 import os
+import re
 from pathlib import Path
 
 
@@ -24,26 +25,57 @@ def parse_playlist_file(filepath):
             line = line.strip()
             if not line or line.startswith('#'):
                 continue
-            # Split on first comma
-            parts = line.split(',', 1)
-            if len(parts) == 2:
-                name = parts[0].strip()
-                url = parts[1].strip()
+            # Check for quoted value: name,"url,time1,time2(label),..."
+            m = re.match(r'^([^,]*),\s*"(.+)"$', line)
+            if m:
+                name = m.group(1).strip()
+                inner = m.group(2).strip()
+                # First item is URL, rest are times
+                parts = [p.strip() for p in inner.split(',')]
+                url = parts[0]
+                times = []
+                for t in parts[1:]:
+                    if not t:
+                        continue
+                    # Parse time with optional label: 4:18(floater) or 0:07
+                    tm = re.match(r'^([\d:]+)\s*(?:\(([^)]*)\))?(.*)$', t)
+                    if tm:
+                        time_str = tm.group(1)
+                        label = (tm.group(2) or '').strip()
+                        # Check for trailing text after the parenthetical
+                        trailing = (tm.group(3) or '').strip()
+                        entry = {'time': time_str}
+                        if label:
+                            entry['label'] = label
+                        if trailing:
+                            entry['note'] = trailing
+                        times.append(entry)
+                    else:
+                        # Not a time — treat as a note/text
+                        pass
             else:
-                # Single value - treat as URL, derive name
-                url = parts[0].strip()
-                name = ''
+                # Simple format: name,url
+                parts = line.split(',', 1)
+                if len(parts) == 2:
+                    name = parts[0].strip()
+                    url = parts[1].strip()
+                else:
+                    url = parts[0].strip()
+                    name = ''
+                times = []
             if not url:
                 continue
             if not name:
                 # Derive name from URL
                 name = url.rstrip('/').split('/')[-1]
                 name = name.split('?')[0]
-                # Remove extension
                 if '.' in name:
                     name = name.rsplit('.', 1)[0]
                 name = name.replace('_', ' ').replace('-', ' ').strip()
-            entries.append({'name': name, 'url': url})
+            entry = {'name': name, 'url': url}
+            if times:
+                entry['times'] = times
+            entries.append(entry)
     return entries
 
 

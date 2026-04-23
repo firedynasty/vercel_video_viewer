@@ -239,6 +239,13 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 .thumbnail-strip::-webkit-scrollbar { height: 6px; }
 .thumbnail-strip::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 3px; }
 .thumbnail-strip::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+.saved-time-btn {
+    border: none; color: #fff; font-size: 12px; font-weight: 600;
+    padding: 8px 14px; border-radius: 20px; cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s; white-space: nowrap;
+}
+.saved-time-btn:hover { transform: scale(1.1); box-shadow: 0 4px 15px rgba(255,255,255,0.3); }
+.saved-time-btn.active { box-shadow: 0 0 12px rgba(255,255,255,0.7); transform: scale(1.05); }
 .thumb-btn {
     min-width: 80px; height: 40px;
     background: rgba(255,255,255,0.1); border: 2px solid transparent;
@@ -413,6 +420,7 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
                 <button class="ctrl-btn" id="speedBtn">1x</button>
             </div>
         </div>
+        <div id="savedTimesButtons" style="display:none;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;"></div>
         <div class="thumbnail-strip" id="thumbnailStrip"></div>
         <div class="instructions">
             ← → seek 5s &bull; [ ] prev/next video &bull; Space play/pause &bull; M mute &bull; R repeat &bull; F fullscreen
@@ -881,6 +889,61 @@ function getYouTubeId(url) {
     return m ? m[1] : null;
 }
 
+var savedTimesContainer = document.getElementById('savedTimesButtons');
+var timeColors = [
+    'linear-gradient(45deg,#4CAF50,#45a049)',
+    'linear-gradient(45deg,#2196F3,#1976D2)',
+    'linear-gradient(45deg,#9C27B0,#7B1FA2)',
+    'linear-gradient(45deg,#ff9800,#f57c00)',
+    'linear-gradient(45deg,#607D8B,#455A64)',
+    'linear-gradient(45deg,#E91E63,#C2185B)',
+    'linear-gradient(45deg,#00BCD4,#0097A7)',
+    'linear-gradient(45deg,#8BC34A,#689F38)',
+    'linear-gradient(45deg,#FF5722,#E64A19)'
+];
+
+function parseTimeToSeconds(timeStr) {
+    timeStr = timeStr.trim();
+    if (/^\d+$/.test(timeStr)) return parseInt(timeStr);
+    var m = timeStr.match(/^(\d+):(\d+)$/);
+    if (m) return parseInt(m[1]) * 60 + parseInt(m[2]);
+    var m2 = timeStr.match(/^(\d+):(\d+):(\d+)$/);
+    if (m2) return parseInt(m2[1]) * 3600 + parseInt(m2[2]) * 60 + parseInt(m2[3]);
+    return null;
+}
+
+function renderSavedTimes(times) {
+    savedTimesContainer.innerHTML = '';
+    if (!times || !times.length) {
+        savedTimesContainer.style.display = 'none';
+        return;
+    }
+    savedTimesContainer.style.display = 'flex';
+    times.forEach(function(t, i) {
+        var btn = document.createElement('button');
+        btn.className = 'saved-time-btn';
+        btn.dataset.time = t.time;
+        btn.dataset.index = i;
+        var label = (i + 1) + ' ' + t.time;
+        if (t.label) label += ' ' + t.label;
+        btn.textContent = label;
+        btn.title = t.label || t.time;
+        btn.style.background = timeColors[i % timeColors.length];
+        btn.addEventListener('click', function() {
+            var secs = parseTimeToSeconds(t.time);
+            if (secs === null) return;
+            document.querySelectorAll('.saved-time-btn').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            if (isYouTube && ytPlayer) {
+                ytPlayer.seekTo(secs, true);
+            } else {
+                mainVideo.currentTime = secs;
+            }
+        });
+        savedTimesContainer.appendChild(btn);
+    });
+}
+
 function showPlayer(show) {
     [prevBtn, nextBtn, videoCounter, videoTitle, videoControls].forEach(function(el) {
         el.style.display = show ? '' : 'none';
@@ -889,6 +952,7 @@ function showPlayer(show) {
     if (!show) {
         mainVideo.style.display = 'none';
         youtubePlayerWrap.style.display = 'none';
+        savedTimesContainer.style.display = 'none';
     }
 }
 
@@ -957,6 +1021,8 @@ async function loadVideo(index) {
 
     videoTitle.textContent = video.title;
     videoCounter.textContent = (index + 1) + ' / ' + videos.length + ' — ' + video.title;
+
+    renderSavedTimes(video.times);
 
     document.querySelectorAll('.thumb-btn').forEach(function(btn, i) {
         btn.classList.toggle('active', i === index);
@@ -1275,7 +1341,9 @@ function selectCategory(cat) {
     // Convert playlist entries to the video format the gallery expects
     var entries = playlistData[cat] || [];
     var videoList = entries.map(function(entry) {
-        return { title: entry.name, src: entry.url };
+        var v = { title: entry.name, src: entry.url };
+        if (entry.times) v.times = entry.times;
+        return v;
     });
     // Fade transition
     var display = document.getElementById('videoDisplay');
