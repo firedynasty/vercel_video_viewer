@@ -411,7 +411,7 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
         </div>
         <div class="thumbnail-strip" id="thumbnailStrip"></div>
         <div class="instructions">
-            Arrow keys or [ ] to navigate &bull; Space play/pause &bull; M mute &bull; R repeat &bull; F fullscreen
+            ← → seek 5s &bull; [ ] prev/next video &bull; Space play/pause &bull; M mute &bull; R repeat &bull; F fullscreen
         </div>
     </div>
 </div>
@@ -942,6 +942,8 @@ mainVideo.addEventListener('progress', updateBufferBar);
 
 mainVideo.addEventListener('canplay', function() {
     loadingOverlay.classList.remove('visible');
+    // Reapply speed after browser resets playbackRate on new source
+    mainVideo.playbackRate = document.getElementById('speedBtn').textContent === '0.5x' ? 0.5 : 1;
     updateBufferBar();
 });
 
@@ -1011,9 +1013,11 @@ mainVideo.addEventListener('click', togglePlayPause);
 document.addEventListener('keydown', function(e) {
     if (['INPUT','SELECT','TEXTAREA'].indexOf(e.target.tagName) !== -1) return;
     switch (e.key) {
-        case 'ArrowLeft': case '[': prevVideo(); break;
-        case 'ArrowRight': case ']': nextVideo(); break;
-        case ' ': e.preventDefault(); togglePlayPause(); break;
+        case 'ArrowLeft': e.preventDefault(); mainVideo.currentTime = Math.max(0, mainVideo.currentTime - 5); break;
+        case 'ArrowRight': e.preventDefault(); mainVideo.currentTime = Math.min(mainVideo.duration || 0, mainVideo.currentTime + 5); break;
+        case '[': prevVideo(); break;
+        case ']': nextVideo(); break;
+        case ' ': e.preventDefault(); e.stopPropagation(); if (document.activeElement) document.activeElement.blur(); togglePlayPause(); break;
         case 'Escape': if (document.fullscreenElement) document.exitFullscreen(); break;
         case 'm': case 'M': toggleMute(); break;
         case 'f': case 'F': toggleFullscreen(); break;

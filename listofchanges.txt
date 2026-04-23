@@ -1,0 +1,17 @@
+2026-04-22 — Arrow keys seek within video, fix spacebar double-trigger
+  - Arrow left/right now seek ±5 seconds within the current video
+  - [ and ] keys navigate between videos (prev/next)
+  - Fixed spacebar play/pause firing twice when a control button had focus
+  - Persist 0.5x speed across video changes via canplay event
+  - Updated keyboard shortcut instructions
+
+2026-04-22 — Add 1x/0.5x speed toggle, hide Topics dropdown, remove topic playlists
+  - Speed toggle button (1x / 0.5x) next to Fullscreen control
+  - Hidden Topics dropdown since all content comes from Dropbox playlists.json
+  - Deleted playlists_chinese.json and playlists_recipes.json
+
+2026-04-22 — Add buffer progress bar and lazy video loading for mobile
+  - Switch video preload from "auto" to "none" so pages stay light
+  - Added YouTube-style red buffer bar showing download progress
+  - Loading overlay shows buffering percentage text on slow connections
+  - Overlay reappears with "Buffering..." when playback stalls mid-video
