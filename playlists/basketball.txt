@@ -1,3 +1,8 @@
-# Basketball clips
-stepback, https://example.com/videos/stepback.mp4
-crossover, https://example.com/videos/crossover.mp4
+doublescreen,https://www.dropbox.com/scl/fi/02f7wzj0n2cwf81of0km4/doublescreen.mp4?rlkey=zqvh41z8off6ahwytyoya45n9&raw=1
+fakeSpinShot,https://www.dropbox.com/scl/fi/ei8rk2fitjzd2jn1vp7tt/fakeSpinShot.mp4?rlkey=5y6h9tyi2np6z2ks9nwws69cw&raw=1
+findingspace,https://www.dropbox.com/scl/fi/73b6mpat81246gx1pway3/findingspace.mp4?rlkey=enqd99jpmmz4j582moahojerg&raw=1
+highlgihts2,https://www.dropbox.com/scl/fi/teky8bvvz6s4vj32brtwy/highlgihts2.mp4?rlkey=ewm0t3snb476zz748472ygf8o&raw=1
+highlights,https://www.dropbox.com/scl/fi/777k91stcxcpzysciki8q/highlights.mp4?rlkey=qq61v5mj6a6f0wkgu1pi0cqkz&raw=1
+highlights1,https://www.dropbox.com/scl/fi/4z3a2758f28qaks6iwcpp/highlights1.mp4?rlkey=pjhhatay4166jmd63741lztbd&raw=1
+impressive,https://www.dropbox.com/scl/fi/vykq57at8drxlu3i8n44u/impressive.mp4?rlkey=cgafvwg7v66ey0rullgckbq0f&raw=1
+nonpivotfoot_up,https://www.dropbox.com/scl/fi/nmm0dz3em7f822ie1xm21/nonpivotfoot_up.mp4?rlkey=1r6s9tr7piuu3z3s6a2d2wxbf&raw=1

@@ -1,5 +1,0 @@
-# Recipe videos
-# Add videos as: name, url  (or just url to auto-derive name)
-# Example:
-# Fried Rice, https://example.com/fried_rice.mp4
-# https://example.com/dumplings.mp4

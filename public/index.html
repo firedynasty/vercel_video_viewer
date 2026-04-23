@@ -390,6 +390,7 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
             <video id="mainVideo" class="main-video" controls preload="none" style="display:none;">
                 Your browser does not support the video tag.
             </video>
+            <iframe id="youtubePlayer" class="main-video" style="display:none; border:none;" allowfullscreen allow="autoplay; encrypted-media"></iframe>
             <div class="loading-overlay" id="loadingOverlay">
                 <div class="spinner"></div>
                 <div class="loading-text" id="loadingText">Loading video...</div>
@@ -865,11 +866,22 @@ var fullscreenBtn = document.getElementById('fullscreenBtn');
 var emptyState = document.getElementById('emptyState');
 var videoControls = document.getElementById('videoControls');
 
+var youtubePlayer = document.getElementById('youtubePlayer');
+
+function getYouTubeId(url) {
+    var m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]+)/);
+    return m ? m[1] : null;
+}
+
 function showPlayer(show) {
-    [mainVideo, prevBtn, nextBtn, videoCounter, videoTitle, videoControls].forEach(function(el) {
+    [prevBtn, nextBtn, videoCounter, videoTitle, videoControls].forEach(function(el) {
         el.style.display = show ? '' : 'none';
     });
     emptyState.style.display = show ? 'none' : '';
+    if (!show) {
+        mainVideo.style.display = 'none';
+        youtubePlayer.style.display = 'none';
+    }
 }
 
 async function loadVideo(index) {
@@ -883,21 +895,37 @@ async function loadVideo(index) {
     mainVideo.load();
 
     var src = video.src;
-    // Resolve Dropbox path to a temporary link
-    if (src.startsWith('__dropbox__') && dbAccessToken) {
-        try {
-            src = await dbGetTempLink(src.slice('__dropbox__'.length));
-            videos[index].src = src; // cache resolved URL
-        } catch (e) {
-            videoTitle.textContent = video.title + ' (link error)';
-            loadingOverlay.classList.remove('visible');
-            return;
-        }
-    }
+    var ytId = getYouTubeId(src);
 
-    mainVideo.src = src;
-    mainVideo.loop = looping;
-    mainVideo.load();
+    if (ytId) {
+        // YouTube embed
+        mainVideo.style.display = 'none';
+        youtubePlayer.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&rel=0';
+        youtubePlayer.style.display = '';
+        loadingOverlay.classList.remove('visible');
+        bufferBar.classList.add('hidden');
+    } else {
+        // Direct video
+        youtubePlayer.style.display = 'none';
+        youtubePlayer.removeAttribute('src');
+        mainVideo.style.display = '';
+
+        // Resolve Dropbox path to a temporary link
+        if (src.startsWith('__dropbox__') && dbAccessToken) {
+            try {
+                src = await dbGetTempLink(src.slice('__dropbox__'.length));
+                videos[index].src = src; // cache resolved URL
+            } catch (e) {
+                videoTitle.textContent = video.title + ' (link error)';
+                loadingOverlay.classList.remove('visible');
+                return;
+            }
+        }
+
+        mainVideo.src = src;
+        mainVideo.loop = looping;
+        mainVideo.load();
+    }
 
     videoTitle.textContent = video.title;
     videoCounter.textContent = (index + 1) + ' / ' + videos.length + ' — ' + video.title;
