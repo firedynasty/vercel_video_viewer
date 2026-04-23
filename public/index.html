@@ -362,7 +362,7 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 <!-- Navbar -->
 <div class="top-navbar">
     <span class="nav-title" id="navTitle">Video Viewer</span>
-    <div class="nav-dropdown" id="topicDropdown" style="display:none;">
+    <div class="nav-dropdown" id="topicDropdown">
         <button class="nav-btn-pill nav-dropdown-btn" onclick="toggleTopicDropdown()">Topics ▾</button>
         <div class="nav-dropdown-menu" id="topicMenu"></div>
     </div>
@@ -469,36 +469,50 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 // TOPIC / PAGE DETECTION
 // =====================================================================
 
-var TOPICS = [
-    { name: 'Home', file: 'index.html' },
-    { name: 'Chinese', file: 'chinese.html' },
-    { name: 'Recipes', file: 'recipes.html' },
-];
+var _currentTopic = 'playlists.json';
 
-var _pageFile = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
-var _pageName = _pageFile.replace('.html', '') || 'index';
-var _isHome = (_pageName === 'index');
-
-// Set page title
-if (!_isHome) {
-    var _topicLabel = _pageName.charAt(0).toUpperCase() + _pageName.slice(1);
-    document.title = _topicLabel + ' — Video Viewer';
-    document.getElementById('navTitle').textContent = _topicLabel;
+async function loadTopics() {
+    try {
+        var res = await fetch('/topics.json');
+        if (!res.ok) return;
+        var topics = await res.json();
+        var menu = document.getElementById('topicMenu');
+        menu.innerHTML = '';
+        topics.forEach(function(t) {
+            var a = document.createElement('a');
+            a.href = '#';
+            a.textContent = t.name;
+            if (t.file === _currentTopic) a.className = 'current';
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                switchTopic(t.file, t.name);
+                document.getElementById('topicDropdown').classList.remove('open');
+            });
+            menu.appendChild(a);
+        });
+    } catch (e) {
+        console.log('Could not load topics.json: ' + e.message);
+    }
 }
 
-// Build topic dropdown
-(function buildTopicDropdown() {
-    var menu = document.getElementById('topicMenu');
-    TOPICS.forEach(function(t) {
-        var a = document.createElement('a');
-        a.href = '/' + t.file;
-        a.textContent = t.name;
-        if (t.file.replace('.html','') === _pageName || (_isHome && t.file === 'index.html')) {
-            a.className = 'current';
-        }
-        menu.appendChild(a);
+async function switchTopic(jsonFile, label) {
+    _currentTopic = jsonFile;
+    document.getElementById('navTitle').textContent = label || 'Video Viewer';
+    document.title = (label || 'Video Viewer') + ' — Video Viewer';
+    document.querySelectorAll('#topicMenu a').forEach(function(a) {
+        a.classList.toggle('current', a.textContent === label);
     });
-})();
+    try {
+        var res = await fetch('/' + jsonFile);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        playlistData = await res.json();
+        buildCategoryButtons();
+        var keys = Object.keys(playlistData);
+        if (keys.length) selectCategory(keys[0]); else showPlayer(false);
+    } catch (e) {
+        console.log('Failed to load ' + jsonFile + ': ' + e.message);
+    }
+}
 
 function toggleTopicDropdown() {
     document.getElementById('topicDropdown').classList.toggle('open');
@@ -1355,22 +1369,19 @@ function selectCategory(cat) {
 }
 
 async function initPlaylists() {
+    // Load topics dropdown
+    await loadTopics();
+
     var params = new URLSearchParams(window.location.search);
     var jsonParam = params.get('json');
 
     var jsonUrl;
     if (jsonParam) {
-        // Explicit override via ?json= query param
         jsonUrl = /^https?:\/\//.test(jsonParam)
             ? '/api/playlists?url=' + encodeURIComponent(jsonParam)
             : jsonParam;
-    } else if (_isHome) {
-        // Main page — fetch from Dropbox via proxy
-        var dropboxUrl = 'https://www.dropbox.com/scl/fi/h5pxdkygvimjbu8qwrd0k/playlists.json?rlkey=3vm19hi0k1xfaf05e9j9x3zn3&st=im4clz2f&raw=1';
-        jsonUrl = '/api/playlists?url=' + encodeURIComponent(dropboxUrl);
     } else {
-        // Topic page — load local JSON (e.g. /playlists_chinese.json)
-        jsonUrl = '/playlists_' + _pageName + '.json';
+        jsonUrl = '/' + _currentTopic;
     }
 
     try {
@@ -1378,7 +1389,6 @@ async function initPlaylists() {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         playlistData = await res.json();
         buildCategoryButtons();
-        // Auto-select first category
         var keys = Object.keys(playlistData);
         if (keys.length) selectCategory(keys[0]);
     } catch (e) {

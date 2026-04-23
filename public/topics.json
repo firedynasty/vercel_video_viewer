@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Home",
+    "file": "playlists.json"
+  },
+  {
+    "name": "Chess",
+    "file": "playlists_chess.json"
+  },
+  {
+    "name": "Cooking",
+    "file": "playlists_cooking.json"
+  }
+]

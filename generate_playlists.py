@@ -111,40 +111,59 @@ def process_playlist_dir(input_dir, output_path):
 def main():
     parser = argparse.ArgumentParser(description='Generate playlist JSON files from .txt folders')
     parser.add_argument('-i', '--input', default=None,
-                        help='Specific input folder (default: auto-scan all playlists*/ dirs)')
+                        help='Specific input folder (default: auto-scan playlists/)')
     parser.add_argument('-o', '--output', default=None,
                         help='Output JSON file (default: auto-derived from input folder name)')
     args = parser.parse_args()
 
     if args.input:
-        # Process a single specified directory
         input_dir = Path(args.input)
         if args.output:
             output_path = args.output
         else:
-            # Derive output: playlists/ -> public/playlists.json
             output_path = f'./public/{input_dir.name}.json'
         print(f'Processing {input_dir}:')
         success = process_playlist_dir(input_dir, output_path)
         return 0 if success else 1
 
-    # Auto-scan: find all playlists*/ directories
-    base = Path('.')
-    playlist_dirs = sorted(base.glob('playlists*/'))
-    playlist_dirs = [d for d in playlist_dirs if d.is_dir() and not d.name.startswith('.')]
-
-    if not playlist_dirs:
-        print('No playlists*/ directories found.')
+    # Process playlists/ directory structure:
+    #   Root .txt files -> public/playlists.json  (topic: "Home")
+    #   Subfolders      -> public/playlists_{name}.json  (topic per folder)
+    playlists_dir = Path('playlists')
+    if not playlists_dir.is_dir():
+        print('No playlists/ directory found.')
         return 1
 
+    topics = []  # [{name, file}]
     total = 0
-    for pdir in playlist_dirs:
-        output_path = f'./public/{pdir.name}.json'
-        print(f'Processing {pdir}/:')
-        if process_playlist_dir(pdir, output_path):
+
+    # 1) Root-level txt files -> playlists.json
+    root_txts = sorted(playlists_dir.glob('*.txt'))
+    if root_txts:
+        output_path = './public/playlists.json'
+        print('Processing playlists/ (root):')
+        if process_playlist_dir(playlists_dir, output_path):
+            topics.append({'name': 'Home', 'file': 'playlists.json'})
             total += 1
 
-    print(f'\nDone. Processed {total} playlist directory(ies).')
+    # 2) Each subfolder -> playlists_{name}.json
+    subdirs = sorted([d for d in playlists_dir.iterdir()
+                      if d.is_dir() and not d.name.startswith('.')])
+    for subdir in subdirs:
+        output_path = f'./public/playlists_{subdir.name}.json'
+        print(f'Processing playlists/{subdir.name}/:')
+        if process_playlist_dir(subdir, output_path):
+            label = subdir.name.replace('_', ' ').replace('-', ' ').title()
+            topics.append({'name': label, 'file': f'playlists_{subdir.name}.json'})
+            total += 1
+
+    # 3) Write topics manifest
+    topics_path = Path('./public/topics.json')
+    with open(topics_path, 'w', encoding='utf-8') as f:
+        json.dump(topics, f, indent=2, ensure_ascii=False)
+    print(f'\n-> Wrote {len(topics)} topic(s) to {topics_path}')
+
+    print(f'Done. Processed {total} playlist source(s).')
     return 0
 
 
