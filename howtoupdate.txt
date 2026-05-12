@@ -1,0 +1,81 @@
+HOW TO ADD AND ORGANIZE PLAYLISTS
+==================================
+
+FOLDER STRUCTURE
+----------------
+playlists/
+├── basketball.txt          <- Root txt files = "Home" topic
+├── wick.txt
+├── youtube.txt
+├── chess/
+│   ├── sample.txt          <- Each subfolder = its own topic
+│   └── youtube-chess.txt   <- Multiple txt files per folder OK
+└── cooking/
+    ├── cooking.txt
+    └── youtube-cooking.txt
+
+
+HOW TOPICS WORK
+---------------
+- Root-level txt files in playlists/ become the "Home" topic
+- Each subfolder becomes a separate topic in the Topics dropdown
+- The folder name becomes the topic label (e.g. chess -> "Chess")
+- Each .txt file inside a folder becomes a category button
+
+
+TXT FILE FORMAT
+---------------
+Simple (direct video):
+  name,https://url-to-video.mp4
+
+YouTube:
+  name,https://www.youtube.com/watch?v=VIDEO_ID
+  name,https://www.youtube.com/shorts/VIDEO_ID
+
+YouTube with timestamps:
+  name,"https://www.youtube.com/watch?v=VIDEO_ID,0:07,0:18,1:13(label),5:01(counter)"
+
+  - Wrap in quotes when adding timestamps after the URL
+  - Times are comma-separated after the URL
+  - Add labels in parentheses: 1:13(snatch)
+  - Time buttons appear above the video thumbnails
+
+
+EXAMPLE: Adding youtube-basketball.txt to a folder
+---------------------------------------------------
+1. Create a folder if needed:
+     mkdir playlists/basketball-drills
+
+2. Create the txt file:
+     playlists/basketball-drills/youtube-basketball.txt
+
+3. Add entries, one per line:
+     stepback,https://www.youtube.com/shorts/AvAH3N6RXxw
+     getting-shifty,"https://www.youtube.com/watch?v=FZImMPkDK3Q,0:07,1:13(snatch),5:01(counter)"
+
+4. Run the generator:
+     python generate_playlists.py
+
+5. That's it. The new topic "Basketball Drills" appears in the
+   Topics dropdown with a "youtube-basketball" category button.
+
+
+ADDING TO AN EXISTING TOPIC
+----------------------------
+Just drop a new txt file into an existing subfolder:
+  playlists/chess/youtube-openings.txt
+
+Then run: python generate_playlists.py
+
+The Chess topic will now show both "sample" and "youtube-openings"
+as category buttons.
+
+
+WHAT GETS GENERATED
+-------------------
+  playlists/*.txt           -> public/playlists.json
+  playlists/chess/*.txt     -> public/playlists_chess.json
+  playlists/cooking/*.txt   -> public/playlists_cooking.json
+  (all topics)              -> public/topics.json
+
+After running generate_playlists.py, commit and push to deploy.

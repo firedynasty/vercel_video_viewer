@@ -1,0 +1,32 @@
+Updates - 2026-05-12
+====================
+
+1. Drop Folder button (green pill in navbar)
+   - Click or drag a local folder onto it
+   - Loads video files (.mp4, .webm, .mov, etc.) into the video dropdown
+   - Loads text files (.txt, .md) into the text file dropdown
+   - Text files are parsed for timestamps (comma-delimited per line)
+   - Text file format: "0:28 (shot fake), 0:54(rock)" or "snatch - 1:22"
+
+2. DB-nonrecursive button (blue pill in navbar)
+   - Opens Dropbox modal to browse and load a folder (non-recursive)
+   - Loads both videos and text files from Dropbox
+   - Text files fetched on-demand via Dropbox temporary links
+   - Requires Dropbox App Key and redirect URI configured in Dropbox App Console
+
+3. Video & Text file dropdowns (replaced horizontal thumbnail strip)
+   - Video dropdown: select any loaded video
+   - Text file dropdown: select a text file to load its timestamps as pill buttons
+   - Full filename displayed below dropdowns on selection
+
+4. Escape key: replay last pill
+   - Tracks the last clicked time pill
+   - Pressing Escape seeks back to that timestamp
+   - If in fullscreen, exits fullscreen first; press again to seek
+
+5. Time pill cleanup
+   - Removed index number from pills (less clutter)
+   - Shows just "0:28 label" instead of "1 0:28 label"
+
+6. Keyboard shortcuts updated
+   - Instructions bar now includes "Esc replay last pill"

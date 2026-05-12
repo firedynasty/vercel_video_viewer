@@ -256,6 +256,29 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 .thumb-btn:hover { background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.4); }
 .thumb-btn.active { border-color: #fff; color: #fff; background: rgba(255,255,255,0.2); }
 .instructions { text-align: center; margin-top: 10px; font-size: 0.8rem; opacity: 0.6; }
+/* ===== VIDEO/TXT DROPDOWNS ===== */
+.dropdown-row {
+    display: none; justify-content: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap;
+}
+.dropdown-row select {
+    background: #2a2a2a; color: #ccc; border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px; padding: 6px 10px; font-size: 0.8rem; min-width: 180px; max-width: 300px;
+    cursor: pointer;
+}
+.dropdown-row select:focus { outline: none; border-color: #fff; color: #fff; }
+.dropdown-row select.txt-select { border-color: rgba(76,175,80,0.5); }
+.dropdown-row select.txt-select:focus { border-color: #4CAF50; }
+/* ===== DROP FOLDER ===== */
+.drop-folder-btn {
+    background: linear-gradient(135deg, #4CAF50, #388E3C); border: none; color: #fff;
+    font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px;
+    cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; white-space: nowrap;
+}
+.drop-folder-btn:hover { transform: scale(1.05); box-shadow: 0 3px 10px rgba(76,175,80,0.5); }
+.drop-folder-btn.dragover { box-shadow: 0 0 15px rgba(76,175,80,0.8); transform: scale(1.1); }
+.thumb-btn.txt-file { border-color: rgba(76,175,80,0.5); color: #81C784; }
+.thumb-btn.txt-file:hover { border-color: rgba(76,175,80,0.8); color: #A5D6A7; background: rgba(76,175,80,0.15); }
+.thumb-btn.txt-file.active { border-color: #4CAF50; color: #fff; background: rgba(76,175,80,0.25); }
 
 @media (max-width: 768px) {
     .main-gallery { padding: 0 10px 10px 10px; }
@@ -367,6 +390,13 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
         <div class="nav-dropdown-menu" id="topicMenu"></div>
     </div>
     <div id="categoryBtnGroup"></div>
+    <button class="nav-btn-pill" onclick="openDropboxModal()" style="background:linear-gradient(135deg,#0061fe,#0050d0);">DB-nonrecursive</button>
+    <button class="drop-folder-btn" id="dropFolderBtn"
+        onclick="document.getElementById('folderInput').click()"
+        ondragover="event.preventDefault(); this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="handleFolderDrop(event); this.classList.remove('dragover')">Drop Folder</button>
+    <input type="file" id="folderInput" style="display:none" webkitdirectory="" directory="" multiple onchange="handleFolderSelect(this.files)" />
     <div class="nav-spacer"></div>
 </div>
 
@@ -421,9 +451,14 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
             </div>
         </div>
         <div id="savedTimesButtons" style="display:none;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;"></div>
-        <div class="thumbnail-strip" id="thumbnailStrip"></div>
+        <div class="dropdown-row" id="dropdownRow">
+            <select id="videoDropdown" onchange="onVideoDropdownChange(this)"></select>
+            <select id="txtDropdown" class="txt-select" onchange="onTxtDropdownChange(this)"></select>
+        </div>
+        <div id="dropdownFileName" style="text-align:center;font-size:0.75rem;color:#aaa;margin-bottom:6px;word-break:break-all;display:none;"></div>
+        <div class="thumbnail-strip" id="thumbnailStrip" style="display:none;"></div>
         <div class="instructions">
-            ← → seek 5s &bull; [ ] prev/next video &bull; Space play/pause &bull; M mute &bull; R repeat &bull; F fullscreen
+            ← → seek 5s &bull; [ ] prev/next video &bull; Space play/pause &bull; M mute &bull; R repeat &bull; F fullscreen &bull; Esc replay last pill
         </div>
     </div>
 </div>
@@ -758,9 +793,12 @@ function dbRenderList(entries) {
     list.innerHTML = '';
     entries.forEach(function(entry) {
         var div = document.createElement('div');
-        div.className = 'db-item' + (entry.isFolder ? '' : ' file');
+        var isTxt = !entry.isFolder && /\.(txt|md)$/i.test(entry.name);
+        var isVid = !entry.isFolder && isVideoFile(entry.name);
+        div.className = 'db-item' + (!entry.isFolder && !isTxt ? ' file' : '');
+        var icon = entry.isFolder ? '📁' : (isTxt ? '📄' : '🎬');
         div.innerHTML =
-            '<span class="db-item-icon">' + (entry.isFolder ? '📁' : '🎬') + '</span>' +
+            '<span class="db-item-icon">' + icon + '</span>' +
             '<span class="db-item-name">' + entry.name + '</span>' +
             (entry.isFolder ? '<span class="db-item-path">' + entry.path + '</span>' : '');
         if (entry.isFolder) {
@@ -789,13 +827,20 @@ function dbRenderBreadcrumb(path) {
 
 function dbUpdateFooter(entries) {
     var footer = document.getElementById('dbFooter');
-    var fileCount = entries.filter(function(e) { return !e.isFolder && isVideoFile(e.name); }).length;
+    var videoCount = entries.filter(function(e) { return !e.isFolder && isVideoFile(e.name); }).length;
+    var txtCount = entries.filter(function(e) {
+        if (e.isFolder) return false;
+        var n = e.name.toLowerCase();
+        return n.endsWith('.txt') || n.endsWith('.md');
+    }).length;
     if (entries.length > 0) {
         footer.style.display = 'flex';
         document.getElementById('dbCurPath').textContent = 'Loading from: ' + (dbCurrentPath || '/ (root)');
-        document.getElementById('dbLoadBtn').textContent =
-            'Load Videos (' + fileCount + ' video' + (fileCount !== 1 ? 's' : '') + ')';
-        document.getElementById('dbLoadBtn').disabled = fileCount === 0;
+        var label = 'Load (' + videoCount + ' video' + (videoCount !== 1 ? 's' : '');
+        if (txtCount) label += ', ' + txtCount + ' txt';
+        label += ')';
+        document.getElementById('dbLoadBtn').textContent = label;
+        document.getElementById('dbLoadBtn').disabled = (videoCount === 0 && txtCount === 0);
     } else {
         footer.style.display = 'none';
     }
@@ -844,16 +889,60 @@ async function dbLoadFolder() {
     if (!dbCurrentPath && dbFolderContents.length === 0) return;
     closeDropboxModal();
     try {
-        // Always do recursive load so subfolders show as dividers
-        var allEntries = await dbListFolderRecursive(dbCurrentPath);
+        // Non-recursive: load only the current folder
+        var allEntries = await dbListFolder(dbCurrentPath);
         var videoEntries = allEntries.filter(function(e) { return !e.isFolder && isVideoFile(e.name); });
+        var txtEntries = allEntries.filter(function(e) {
+            if (e.isFolder) return false;
+            var n = e.name.toLowerCase();
+            return n.endsWith('.txt') || n.endsWith('.md');
+        });
         var videoList = videoEntries.map(function(e) {
             return { title: nameFromUrl(e.path), src: dbDropboxPathToRawUrl(e.path), dropboxPath: e.path };
         });
         applyVideoList(videoList, 'Dropbox: ' + (dbCurrentPath || '/'));
-        setStatus('Loaded ' + videoList.length + ' video(s) from ' + (dbCurrentPath || '/'));
+        // Load text files into thumbnail strip
+        appendDbTxtFileButtons(txtEntries);
+        setStatus('Loaded ' + videoList.length + ' video(s) and ' + txtEntries.length + ' text file(s) from ' + (dbCurrentPath || '/'));
     } catch (e) {
         setStatus('Dropbox error: ' + e.message);
+    }
+}
+
+function appendDbTxtFileButtons(txtEntries) {
+    if (!txtEntries.length) return;
+    var txtDD = document.getElementById('txtDropdown');
+    txtDD.style.display = '';
+    txtEntries.forEach(function(entry, i) {
+        var btn = document.createElement('button');
+        btn.className = 'thumb-btn txt-file';
+        var displayName = entry.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ');
+        btn.textContent = '\u{1F4C4} ' + displayName;
+        btn.title = entry.name;
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.thumb-btn.txt-file').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            txtDD.value = i;
+            setDropdownFileName(entry.name);
+            loadTimesFromDbTxtFile(entry.path);
+        });
+        thumbnailStrip.appendChild(btn);
+        var opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = '\u{1F4C4} ' + displayName;
+        txtDD.appendChild(opt);
+    });
+}
+
+async function loadTimesFromDbTxtFile(dropboxPath) {
+    try {
+        var link = await dbGetTempLink(dropboxPath);
+        var res = await fetch(link);
+        var text = await res.text();
+        var times = parseTxtAsTimes(text);
+        renderSavedTimes(times);
+    } catch (e) {
+        setStatus('Error loading text file: ' + e.message);
     }
 }
 
@@ -904,6 +993,7 @@ function getYouTubeId(url) {
 }
 
 var savedTimesContainer = document.getElementById('savedTimesButtons');
+var lastPillTime = null; // tracks the last clicked time pill in seconds
 var timeColors = [
     'linear-gradient(45deg,#4CAF50,#45a049)',
     'linear-gradient(45deg,#2196F3,#1976D2)',
@@ -938,7 +1028,7 @@ function renderSavedTimes(times) {
         btn.className = 'saved-time-btn';
         btn.dataset.time = t.time;
         btn.dataset.index = i;
-        var label = (i + 1) + ' ' + t.time;
+        var label = t.time;
         if (t.label) label += ' ' + t.label;
         btn.textContent = label;
         btn.title = t.label || t.time;
@@ -946,6 +1036,7 @@ function renderSavedTimes(times) {
         btn.addEventListener('click', function() {
             var secs = parseTimeToSeconds(t.time);
             if (secs === null) return;
+            lastPillTime = secs;
             document.querySelectorAll('.saved-time-btn').forEach(function(b) { b.classList.remove('active'); });
             btn.classList.add('active');
             if (isYouTube && ytPlayer) {
@@ -1038,9 +1129,10 @@ async function loadVideo(index) {
 
     renderSavedTimes(video.times);
 
-    document.querySelectorAll('.thumb-btn').forEach(function(btn, i) {
+    document.querySelectorAll('.thumb-btn:not(.txt-file)').forEach(function(btn, i) {
         btn.classList.toggle('active', i === index);
     });
+    document.getElementById('videoDropdown').value = index;
     var activeBtn = thumbnailStrip.children[index];
     if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 }
@@ -1103,13 +1195,24 @@ mainVideo.addEventListener('error', function() {
 
 function buildThumbnails() {
     thumbnailStrip.innerHTML = '';
+    var videoDD = document.getElementById('videoDropdown');
+    var txtDD = document.getElementById('txtDropdown');
+    videoDD.innerHTML = '';
+    txtDD.innerHTML = '<option value="">-- text files --</option>';
+    txtDD.style.display = 'none';
     videos.forEach(function(video, index) {
         var btn = document.createElement('button');
         btn.className = 'thumb-btn';
         btn.textContent = video.title;
         btn.addEventListener('click', function() { loadVideo(index); });
         thumbnailStrip.appendChild(btn);
+        // Also add to dropdown
+        var opt = document.createElement('option');
+        opt.value = index;
+        opt.textContent = video.title;
+        videoDD.appendChild(opt);
     });
+    document.getElementById('dropdownRow').style.display = videos.length ? 'flex' : 'none';
 }
 
 function nextVideo() { if (videos.length) loadVideo((currentIndex + 1) % videos.length); }
@@ -1192,7 +1295,13 @@ document.addEventListener('keydown', function(e) {
         case '[': prevVideo(); break;
         case ']': nextVideo(); break;
         case ' ': e.preventDefault(); e.stopPropagation(); if (document.activeElement) document.activeElement.blur(); togglePlayPause(); break;
-        case 'Escape': if (document.fullscreenElement) document.exitFullscreen(); break;
+        case 'Escape':
+            if (document.fullscreenElement) { document.exitFullscreen(); }
+            else if (lastPillTime !== null) {
+                if (isYouTube && ytPlayer) { ytPlayer.seekTo(lastPillTime, true); }
+                else { mainVideo.currentTime = lastPillTime; }
+            }
+            break;
         case 'm': case 'M': toggleMute(); break;
         case 'f': case 'F': toggleFullscreen(); break;
         case 'r': case 'R': toggleLoop(); break;
@@ -1413,6 +1522,165 @@ async function initPlaylists() {
         }
     });
 })();
+
+// =====================================================================
+// VIDEO / TXT DROPDOWN HANDLERS
+// =====================================================================
+
+function onVideoDropdownChange(sel) {
+    var idx = parseInt(sel.value);
+    if (!isNaN(idx)) {
+        loadVideo(idx);
+        setDropdownFileName(sel.options[sel.selectedIndex].textContent);
+    }
+}
+
+function onTxtDropdownChange(sel) {
+    var val = sel.value;
+    if (!val) { setDropdownFileName(''); return; }
+    // Find and click the matching txt-file thumb button to reuse existing logic
+    var btns = document.querySelectorAll('.thumb-btn.txt-file');
+    btns.forEach(function(b) { b.classList.remove('active'); });
+    if (btns[parseInt(val)]) {
+        btns[parseInt(val)].click();
+    }
+}
+
+function setDropdownFileName(name) {
+    var el = document.getElementById('dropdownFileName');
+    if (name) {
+        el.textContent = name;
+        el.style.display = '';
+    } else {
+        el.textContent = '';
+        el.style.display = 'none';
+    }
+}
+
+// =====================================================================
+// DROP FOLDER — load local videos + text files
+// =====================================================================
+
+var droppedTxtFiles = []; // { name, file } — text files from the dropped folder
+
+function handleFolderDrop(e) {
+    e.preventDefault();
+    var items = e.dataTransfer.items;
+    if (!items || !items.length) return;
+    var files = [];
+    for (var i = 0; i < items.length; i++) {
+        var entry = items[i].webkitGetAsEntry && items[i].webkitGetAsEntry();
+        if (entry) collectEntries(entry, files);
+    }
+    // webkitGetAsEntry is async-ish; use dataTransfer.files as fallback
+    if (!files.length) processDroppedFiles(e.dataTransfer.files);
+}
+
+function collectEntries(entry, files) {
+    // Simplified: for drag-and-drop we fall back to the file list
+    // The folder input (click) handles the recursive case fine
+}
+
+function handleFolderSelect(fileList) {
+    processDroppedFiles(fileList);
+}
+
+function processDroppedFiles(fileList) {
+    var videoFiles = [];
+    var txtFiles = [];
+
+    for (var i = 0; i < fileList.length; i++) {
+        var f = fileList[i];
+        var name = f.name.toLowerCase();
+        if (isVideoFile(name)) {
+            videoFiles.push(f);
+        } else if (name.endsWith('.txt') || name.endsWith('.md')) {
+            txtFiles.push(f);
+        }
+    }
+
+    // Sort files naturally
+    videoFiles.sort(function(a, b) { return a.name.localeCompare(b.name, undefined, { numeric: true }); });
+    txtFiles.sort(function(a, b) { return a.name.localeCompare(b.name, undefined, { numeric: true }); });
+
+    // Build video list from local files using object URLs
+    var videoList = videoFiles.map(function(f) {
+        return { title: nameFromUrl(f.name), src: URL.createObjectURL(f) };
+    });
+
+    if (videoList.length) {
+        applyVideoList(videoList, 'Local folder');
+        setStatus('Loaded ' + videoList.length + ' video(s) and ' + txtFiles.length + ' text file(s) from folder');
+    }
+
+    // Store text files and append them to the thumbnail strip
+    droppedTxtFiles = txtFiles;
+    appendTxtFileButtons(txtFiles);
+}
+
+function appendTxtFileButtons(txtFiles) {
+    if (!txtFiles.length) return;
+    var txtDD = document.getElementById('txtDropdown');
+    txtDD.style.display = '';
+    txtFiles.forEach(function(f, i) {
+        var btn = document.createElement('button');
+        btn.className = 'thumb-btn txt-file';
+        var displayName = f.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ');
+        btn.textContent = '\u{1F4C4} ' + displayName;
+        btn.title = f.name;
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.thumb-btn.txt-file').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            txtDD.value = i;
+            setDropdownFileName(f.name);
+            loadTimesFromTxtFile(f);
+        });
+        thumbnailStrip.appendChild(btn);
+        var opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = '\u{1F4C4} ' + displayName;
+        txtDD.appendChild(opt);
+    });
+}
+
+function loadTimesFromTxtFile(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var text = e.target.result;
+        var times = parseTxtAsTimes(text);
+        renderSavedTimes(times);
+    };
+    reader.readAsText(file);
+}
+
+function parseTxtAsTimes(text) {
+    var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
+    var times = [];
+    for (var i = 0; i < lines.length; i++) {
+        // Split each line by comma to handle multiple timestamps per line
+        // e.g. "0:28 (shot fake arms out), 0:54(rock)"
+        var parts = lines[i].split(',');
+        for (var p = 0; p < parts.length; p++) {
+            var part = parts[p].trim();
+            if (!part) continue;
+            // timestamp at start: "0:28 label" or "0:28(label)"
+            var m = part.match(/^(\d{1,2}:\d{2}(?::\d{2})?)\s*(.*)/);
+            if (m) {
+                var entry = { time: m[1] };
+                var label = m[2].replace(/^[-–—]\s*/, '').replace(/^\(/, '').replace(/\)$/, '').trim();
+                if (label) entry.label = label;
+                times.push(entry);
+                continue;
+            }
+            // label before timestamp: "snatch - 1:22"
+            var m2 = part.match(/^(.+?)\s*[-–—]\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*$/);
+            if (m2) {
+                times.push({ time: m2[2], label: m2[1].trim() });
+            }
+        }
+    }
+    return times;
+}
 
 // =====================================================================
 // INIT

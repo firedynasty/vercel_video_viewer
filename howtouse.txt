@@ -1,0 +1,30 @@
+
+
+so you change what's in playlist
+
+with 
+
+
+(base) ➜  playlists git:(main) ✗ tree
+.
+├── basketball.txt
+├── chess
+│   └── sample.txt
+├── cooking
+│   └── cooking.txt
+├── plays.txt
+├── wick.txt
+└── youtube.txt
+
+3 directories, 6 files
+
+
+and what happens from here is 
+
+that you can drop different text files in the folder 
+
+and then change the info inside
+
+
+then run generate*.py 
+
