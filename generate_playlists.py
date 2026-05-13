@@ -126,44 +126,63 @@ def main():
         success = process_playlist_dir(input_dir, output_path)
         return 0 if success else 1
 
-    # Process playlists/ directory structure:
-    #   Root .txt files -> public/playlists.json  (topic: "Home")
-    #   Subfolders      -> public/playlists_{name}.json  (topic per folder)
+    # Process playlists/ directory structure into a single nested playlists.json:
+    #   { "Home": { category: [...] }, "Chess": { category: [...] }, ... }
+    # and a simple topics.json: ["Home", "Chess", ...]
     playlists_dir = Path('playlists')
     if not playlists_dir.is_dir():
         print('No playlists/ directory found.')
         return 1
 
-    topics = []  # [{name, file}]
-    total = 0
+    all_playlists = {}  # { topic_name: { category: [entries] } }
+    topics = []  # [topic_name, ...]
 
-    # 1) Root-level txt files -> playlists.json
+    # 1) Root-level txt files -> "Home" topic
     root_txts = sorted(playlists_dir.glob('*.txt'))
     if root_txts:
-        output_path = './public/playlists.json'
-        print('Processing playlists/ (root):')
-        if process_playlist_dir(playlists_dir, output_path):
-            topics.append({'name': 'Home', 'file': 'playlists.json'})
-            total += 1
+        print('Processing playlists/ (root) -> Home:')
+        categories = {}
+        for txt_file in root_txts:
+            category = txt_file.stem
+            entries = parse_playlist_file(txt_file)
+            categories[category] = entries
+            print(f'    {category}: {len(entries)} video(s)')
+        all_playlists['Home'] = categories
+        topics.append('Home')
 
-    # 2) Each subfolder -> playlists_{name}.json
+    # 2) Each subfolder -> its own topic
     subdirs = sorted([d for d in playlists_dir.iterdir()
                       if d.is_dir() and not d.name.startswith('.')])
     for subdir in subdirs:
-        output_path = f'./public/playlists_{subdir.name}.json'
-        print(f'Processing playlists/{subdir.name}/:')
-        if process_playlist_dir(subdir, output_path):
-            label = subdir.name.replace('_', ' ').replace('-', ' ').title()
-            topics.append({'name': label, 'file': f'playlists_{subdir.name}.json'})
-            total += 1
+        label = subdir.name.replace('_', ' ').replace('-', ' ').title()
+        print(f'Processing playlists/{subdir.name}/ -> {label}:')
+        txt_files = sorted(subdir.glob('*.txt'))
+        if not txt_files:
+            print(f'  No .txt files found')
+            continue
+        categories = {}
+        for txt_file in txt_files:
+            category = txt_file.stem
+            entries = parse_playlist_file(txt_file)
+            categories[category] = entries
+            print(f'    {category}: {len(entries)} video(s)')
+        all_playlists[label] = categories
+        topics.append(label)
 
-    # 3) Write topics manifest
+    # 3) Write single playlists.json
+    playlists_path = Path('./public/playlists.json')
+    playlists_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(playlists_path, 'w', encoding='utf-8') as f:
+        json.dump(all_playlists, f, indent=2, ensure_ascii=False)
+    print(f'\n-> Wrote {len(all_playlists)} topic(s) to {playlists_path}')
+
+    # 4) Write topics.json (simple list)
     topics_path = Path('./public/topics.json')
     with open(topics_path, 'w', encoding='utf-8') as f:
         json.dump(topics, f, indent=2, ensure_ascii=False)
-    print(f'\n-> Wrote {len(topics)} topic(s) to {topics_path}')
+    print(f'-> Wrote {len(topics)} topic(s) to {topics_path}')
 
-    print(f'Done. Processed {total} playlist source(s).')
+    print(f'Done. Processed {len(all_playlists)} topic(s).')
     return 0
 
 

@@ -504,23 +504,35 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 // TOPIC / PAGE DETECTION
 // =====================================================================
 
-var _currentTopic = 'playlists.json';
+var _currentTopic = 'Home';
+var _allPlaylists = {};  // { topicName: { category: [entries] } }
+var DROPBOX_PLAYLISTS_URL = 'https://www.dropbox.com/scl/fi/h5pxdkygvimjbu8qwrd0k/playlists.json?rlkey=3vm19hi0k1xfaf05e9j9x3zn3&st=76tow416&raw=1';
+var DROPBOX_TOPICS_URL = 'https://www.dropbox.com/scl/fi/2zoure5d93ptaiew8z466/topics.json?rlkey=rklcew9c3r6mmcxsqf4ecum54&st=ac9znwo1&raw=1';
+
+async function fetchWithFallback(dropboxUrl, localPath) {
+    var res;
+    try {
+        res = await fetch(dropboxUrl);
+    } catch (_) {}
+    if (!res || !res.ok) res = await fetch(localPath);
+    return res;
+}
 
 async function loadTopics() {
     try {
-        var res = await fetch('/topics.json');
+        var res = await fetchWithFallback(DROPBOX_TOPICS_URL, 'topics.json');
         if (!res.ok) return;
         var topics = await res.json();
         var menu = document.getElementById('topicMenu');
         menu.innerHTML = '';
-        topics.forEach(function(t) {
+        topics.forEach(function(name) {
             var a = document.createElement('a');
             a.href = '#';
-            a.textContent = t.name;
-            if (t.file === _currentTopic) a.className = 'current';
+            a.textContent = name;
+            if (name === _currentTopic) a.className = 'current';
             a.addEventListener('click', function(e) {
                 e.preventDefault();
-                switchTopic(t.file, t.name);
+                switchTopic(name);
                 document.getElementById('topicDropdown').classList.remove('open');
             });
             menu.appendChild(a);
@@ -530,23 +542,17 @@ async function loadTopics() {
     }
 }
 
-async function switchTopic(jsonFile, label) {
-    _currentTopic = jsonFile;
-    document.getElementById('navTitle').textContent = label || 'Video Viewer';
-    document.title = (label || 'Video Viewer') + ' — Video Viewer';
+function switchTopic(topicName) {
+    _currentTopic = topicName;
+    document.getElementById('navTitle').textContent = topicName || 'Video Viewer';
+    document.title = (topicName || 'Video Viewer') + ' — Video Viewer';
     document.querySelectorAll('#topicMenu a').forEach(function(a) {
-        a.classList.toggle('current', a.textContent === label);
+        a.classList.toggle('current', a.textContent === topicName);
     });
-    try {
-        var res = await fetch('/' + jsonFile);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        playlistData = await res.json();
-        buildCategoryButtons();
-        var keys = Object.keys(playlistData);
-        if (keys.length) selectCategory(keys[0]); else showPlayer(false);
-    } catch (e) {
-        console.log('Failed to load ' + jsonFile + ': ' + e.message);
-    }
+    playlistData = _allPlaylists[topicName] || {};
+    buildCategoryButtons();
+    var keys = Object.keys(playlistData);
+    if (keys.length) selectCategory(keys[0]); else showPlayer(false);
 }
 
 function toggleTopicDropdown() {
@@ -1478,30 +1484,23 @@ function selectCategory(cat) {
 }
 
 async function initPlaylists() {
+    // Load all playlists (nested by topic)
+    try {
+        var res = await fetchWithFallback(DROPBOX_PLAYLISTS_URL, 'playlists.json');
+        if (res.ok) {
+            _allPlaylists = await res.json();
+        }
+    } catch (e) {
+        console.log('Failed to load playlists.json: ' + e.message);
+    }
+
     // Load topics dropdown
     await loadTopics();
 
-    var params = new URLSearchParams(window.location.search);
-    var jsonParam = params.get('json');
-
-    var jsonUrl;
-    if (jsonParam) {
-        jsonUrl = /^https?:\/\//.test(jsonParam)
-            ? '/api/playlists?url=' + encodeURIComponent(jsonParam)
-            : jsonParam;
-    } else {
-        jsonUrl = '/' + _currentTopic;
-    }
-
-    try {
-        var res = await fetch(jsonUrl);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        playlistData = await res.json();
-        buildCategoryButtons();
-        var keys = Object.keys(playlistData);
-        if (keys.length) selectCategory(keys[0]);
-    } catch (e) {
-        console.log('No playlist JSON found or failed to load: ' + e.message);
+    // Select first topic
+    var topicNames = Object.keys(_allPlaylists);
+    if (topicNames.length) {
+        switchTopic(topicNames[0]);
     }
 }
 
