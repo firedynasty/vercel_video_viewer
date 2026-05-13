@@ -512,8 +512,12 @@ var DROPBOX_TOPICS_URL = 'https://www.dropbox.com/scl/fi/308xt4lezq0o81v99vvd0/t
 async function fetchWithFallback(dropboxUrl, localPath) {
     var res;
     try {
-        res = await fetch(dropboxUrl);
+        // Use proxy to avoid CORS issues with Dropbox
+        res = await fetch('/api/playlists?url=' + encodeURIComponent(dropboxUrl));
     } catch (_) {}
+    if (!res || !res.ok) {
+        try { res = await fetch(dropboxUrl); } catch (_) {}
+    }
     if (!res || !res.ok) res = await fetch(localPath);
     return res;
 }
