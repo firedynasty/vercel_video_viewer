@@ -1471,20 +1471,58 @@ function selectCategory(cat) {
     document.querySelectorAll('.nav-cat-btn').forEach(function(btn) {
         btn.classList.toggle('active', btn.dataset.category === cat);
     });
-    // Convert playlist entries to the video format the gallery expects
+    // Split entries into videos (have url) and text-only (have times but no url)
     var entries = playlistData[cat] || [];
-    var videoList = entries.map(function(entry) {
-        var v = { title: entry.name, src: entry.url };
-        if (entry.times) v.times = entry.times;
-        return v;
+    var videoList = [];
+    var textEntries = [];
+    entries.forEach(function(entry) {
+        if (entry.type === 'text' || !entry.url) {
+            textEntries.push(entry);
+        } else {
+            var v = { title: entry.name, src: entry.url };
+            if (entry.times) v.times = entry.times;
+            videoList.push(v);
+        }
     });
     // Fade transition
     var display = document.getElementById('videoDisplay');
     display.style.opacity = '0';
     setTimeout(function() {
         applyVideoList(videoList, 'Category: ' + cat);
+        // Populate text dropdown with text-only entries
+        applyTextEntries(textEntries);
         display.style.opacity = '1';
     }, 200);
+}
+
+function applyTextEntries(textEntries) {
+    var txtDD = document.getElementById('txtDropdown');
+    txtDD.innerHTML = '<option value="">-- text files --</option>';
+    if (!textEntries.length) {
+        txtDD.style.display = 'none';
+        return;
+    }
+    txtDD.style.display = '';
+    // Store text entries for access by dropdown handler
+    txtDD._textEntries = textEntries;
+    textEntries.forEach(function(entry, i) {
+        var opt = document.createElement('option');
+        opt.value = 'text_' + i;
+        opt.textContent = '\u{1F4C4} ' + entry.name;
+        txtDD.appendChild(opt);
+        // Also add as thumbnail button
+        var btn = document.createElement('button');
+        btn.className = 'thumb-btn txt-file';
+        btn.textContent = '\u{1F4C4} ' + entry.name;
+        btn.title = entry.name;
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.thumb-btn.txt-file').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            txtDD.value = 'text_' + i;
+            renderSavedTimes(entry.times);
+        });
+        thumbnailStrip.appendChild(btn);
+    });
 }
 
 async function initPlaylists() {
@@ -1541,6 +1579,17 @@ function onVideoDropdownChange(sel) {
 function onTxtDropdownChange(sel) {
     var val = sel.value;
     if (!val) { setDropdownFileName(''); return; }
+    // Handle playlist text entries (text_0, text_1, ...)
+    if (val.startsWith('text_') && sel._textEntries) {
+        var idx = parseInt(val.slice(5));
+        var entry = sel._textEntries[idx];
+        if (entry) {
+            document.querySelectorAll('.thumb-btn.txt-file').forEach(function(b) { b.classList.remove('active'); });
+            setDropdownFileName(entry.name);
+            renderSavedTimes(entry.times);
+        }
+        return;
+    }
     // Find and click the matching txt-file thumb button to reuse existing logic
     var btns = document.querySelectorAll('.thumb-btn.txt-file');
     btns.forEach(function(b) { b.classList.remove('active'); });

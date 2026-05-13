@@ -92,8 +92,8 @@ def parse_playlist_file(filepath):
                                 merged = True
                                 break
                         if not merged:
-                            # No matching entry found — skip (times without a video)
-                            pass
+                            # Standalone text entry (times without a video)
+                            entries.append({'name': name, 'times': times, 'type': 'text'})
                     continue
                 url = rest
                 times = []
