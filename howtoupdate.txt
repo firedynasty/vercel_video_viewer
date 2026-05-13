@@ -73,9 +73,14 @@ as category buttons.
 
 WHAT GETS GENERATED
 -------------------
-  playlists/*.txt           -> public/playlists.json
-  playlists/chess/*.txt     -> public/playlists_chess.json
-  playlists/cooking/*.txt   -> public/playlists_cooking.json
-  (all topics)              -> public/topics.json
 
-After running generate_playlists.py, commit and push to deploy.
+only playlists.json and topics.json get generated
+
+playlists.json will be nested and then copy over to vercel
+
+and topics.json will have the dropdown
+
+
+don't delete API folder
+
+

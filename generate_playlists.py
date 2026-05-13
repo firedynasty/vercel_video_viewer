@@ -54,14 +54,48 @@ def parse_playlist_file(filepath):
                         # Not a time — treat as a note/text
                         pass
             else:
-                # Simple format: name,url
+                # Simple format: name,url  OR  name,time1,time2,...
                 parts = line.split(',', 1)
                 if len(parts) == 2:
                     name = parts[0].strip()
-                    url = parts[1].strip()
+                    rest = parts[1].strip()
                 else:
-                    url = parts[0].strip()
+                    rest = parts[0].strip()
                     name = ''
+                # Check if rest is timestamps (no URL) — e.g. "0:07,0:18,1:13(label)"
+                # A URL starts with http(s):// or / or contains a dot before any colon
+                is_url = bool(re.match(r'^https?://', rest) or re.match(r'^/', rest))
+                if not is_url and re.match(r'^\d{1,2}:\d{2}', rest):
+                    # This line is timestamps for a previous entry with the same name
+                    time_parts = [p.strip() for p in rest.split(',')]
+                    times = []
+                    for t in time_parts:
+                        if not t:
+                            continue
+                        tm = re.match(r'^([\d:]+)\s*(?:\(([^)]*)\))?(.*)$', t)
+                        if tm:
+                            time_str = tm.group(1)
+                            label = (tm.group(2) or '').strip()
+                            trailing = (tm.group(3) or '').strip()
+                            tentry = {'time': time_str}
+                            if label:
+                                tentry['label'] = label
+                            if trailing:
+                                tentry['note'] = trailing
+                            times.append(tentry)
+                    if times and name:
+                        # Merge into existing entry with same name
+                        merged = False
+                        for existing in entries:
+                            if existing['name'] == name:
+                                existing.setdefault('times', []).extend(times)
+                                merged = True
+                                break
+                        if not merged:
+                            # No matching entry found — skip (times without a video)
+                            pass
+                    continue
+                url = rest
                 times = []
             if not url:
                 continue
@@ -183,6 +217,10 @@ def main():
     print(f'-> Wrote {len(topics)} topic(s) to {topics_path}')
 
     print(f'Done. Processed {len(all_playlists)} topic(s).')
+
+    # Print rclone commands to sync to Dropbox
+    base = Path(__file__).resolve().parent / 'public'
+    print(f'\nrclone copy {base / "playlists.json"}  dropbox:/vercel && rclone copy {base / "topics.json"}  dropbox:/vercel')
     return 0
 
 

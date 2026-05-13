@@ -14,13 +14,15 @@ fast-slow-drills,https://www.youtube.com/shorts/XboEEjBwCMY
 slow-down-here-quick,https://www.youtube.com/shorts/B-L_PHMXm8Y
 change-pace-go-see-the-shorts-at-youtube,https://www.youtube.com/watch?v=Jkk-eDqYbWw
 shooting-coach-Mike,https://www.youtube.com/watch?v=EoQu1XJfEb8
-getting-shifty,"https://www.youtube.com/watch?v=FZImMPkDK3Q,0:07,0:18,0:21,0:36,0:57,1:01,1:05, 1:11, 1:13(turn_around_back_and_forth),1:15(forward_to_backwards),1:22(snatch), 1:30(cross_overs), 1:37(hesi_to_shot), 2:09(drive-step-back),3:02 (snatch), 3:15(drop-to-pull-back), 5:01(counter), 5:08(dribble to behind the back counter), 5:12(reach and I will teach), 5:14(got eh counter straight wing), 5:16(Paul spin -- left hand in then spin -- shoulder to the left then back), 5:22(perfect-snatch),in basketball always cross against the side you are going especially I'm by the free throw, when someone is in front you can always,"
+getting-shifty,https://www.youtube.com/watch?v=FZImMPkDK3Q
+getting-shifty,0:07,0:18,0:21,0:36,0:57,1:01,1:05, 1:11, 1:13(turn_around_back_and_forth),1:15(forward_to_backwards),1:22(snatch), 1:30(cross_overs), 1:37(hesi_to_shot), 2:09(drive-step-back),3:02 (snatch), 3:15(drop-to-pull-back), 5:01(counter), 5:08(dribble to behind the back counter), 5:12(reach and I will teach), 5:14(got eh counter straight wing), 5:16(Paul spin -- left hand in then spin -- shoulder to the left then back), 5:22(perfect-snatch),in basketball always cross against the side you are going especially I'm by the free throw, when someone is in front you can always
 pick-the-play,https://www.youtube.com/watch?v=j16FCb3BbDs&t=155s
 against-pyhysical-defender,https://www.youtube.com/watch?v=QJdHoI7VO9E
 nba-how-to,https://www.youtube.com/watch?v=e7sWXixI77M&t=97s
 manipulate-the-ball,https://www.youtube.com/shorts/oo594Kzt41A
 dribbline-drills,https://www.youtube.com/watch?v=loraMUWKteA
-highlight-shot-floater,"https://www.youtube.com/watch?v=13NB4zcVTA8?4:18(floater),4:31(three point shot)"
+highlight-shot-floater,https://www.youtube.com/watch?v=13NB4zcVTA8?
+highlight-shot-floater,4:18(floater),4:31(three point shot)
 passing,https://www.youtube.com/watch?v=-WRHRhWdsko
 change-direction,https://www.youtube.com/watch?v=Coim-2LzADI
 basic-dribbling,https://www.youtube.com/watch?v=vR0e6jztDIg
