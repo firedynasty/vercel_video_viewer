@@ -85,15 +85,12 @@ def parse_playlist_file(filepath):
                             times.append(tentry)
                     if times and name:
                         # Merge into existing entry with same name
-                        merged = False
                         for existing in entries:
                             if existing['name'] == name:
                                 existing.setdefault('times', []).extend(times)
-                                merged = True
                                 break
-                        if not merged:
-                            # Standalone text entry (times without a video)
-                            entries.append({'name': name, 'times': times, 'type': 'text'})
+                        # Always also add as a text entry for the text dropdown
+                        entries.append({'name': name, 'times': times, 'type': 'text'})
                     continue
                 url = rest
                 times = []
