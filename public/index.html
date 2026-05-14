@@ -445,6 +445,9 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
             </div>
         </div>
         <div id="savedTimesButtons" style="display:none;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;"></div>
+        <div style="text-align:center;margin-bottom:8px;">
+            <input id="addTimeInput" type="text" placeholder="0:07" style="width:60px;padding:4px 8px;border:1px solid #555;border-radius:12px;background:#222;color:#fff;font-size:12px;text-align:center;">
+        </div>
         <div class="dropdown-row" id="dropdownRow">
             <select id="videoDropdown" onchange="onVideoDropdownChange(this)"></select>
             <select id="txtDropdown" class="txt-select" onchange="onTxtDropdownChange(this)"></select>
@@ -1038,6 +1041,42 @@ function renderSavedTimes(times) {
         savedTimesContainer.appendChild(btn);
     });
 }
+
+var addTimeInput = document.getElementById('addTimeInput');
+var manualTimes = []; // times added via the input
+addTimeInput.addEventListener('input', function() {
+    var val = this.value.trim();
+    // Match m:ss or mm:ss or h:mm:ss
+    if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(val)) {
+        var secs = parseTimeToSeconds(val);
+        if (secs !== null) {
+            manualTimes.push({time: val});
+            var count = savedTimesContainer.children.length;
+            var btn = document.createElement('button');
+            btn.className = 'saved-time-btn';
+            btn.dataset.time = val;
+            btn.dataset.index = count;
+            btn.textContent = val;
+            btn.title = val;
+            btn.style.background = timeColors[count % timeColors.length];
+            btn.addEventListener('click', function() {
+                var s = parseTimeToSeconds(val);
+                if (s === null) return;
+                lastPillTime = s;
+                document.querySelectorAll('.saved-time-btn').forEach(function(b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                if (isYouTube && ytPlayer) {
+                    ytPlayer.seekTo(s, true);
+                } else {
+                    mainVideo.currentTime = s;
+                }
+            });
+            savedTimesContainer.appendChild(btn);
+            savedTimesContainer.style.display = 'flex';
+            this.value = '';
+        }
+    }
+});
 
 function showPlayer(show) {
     [prevBtn, nextBtn, videoTitle, videoControls].forEach(function(el) {
