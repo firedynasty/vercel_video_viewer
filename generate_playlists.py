@@ -209,9 +209,13 @@ def main():
 
     print(f'Done. Processed {len(all_playlists)} topic(s).')
 
-    # Print rclone command to sync to Dropbox
+    # Print commands to sync to Dropbox and update Vercel env var
     base = Path(__file__).resolve().parent / 'public'
     print(f'\nrclone copy {base / "playlists.json"}  dropbox:/vercel')
+    print(f'rclone link dropbox:/vercel/playlists.json')
+    print(f'\n# Then update Vercel with the link (append &raw=1):')
+    print(f'vercel env rm DROPBOX_PLAYLISTS_URL production -y')
+    print(f'echo "<LINK>&raw=1" | vercel env add DROPBOX_PLAYLISTS_URL production')
     return 0
 
 
