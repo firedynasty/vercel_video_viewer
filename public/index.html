@@ -171,11 +171,6 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 .nav-arrow:hover { background: rgba(0,0,0,0.8); transform: translateY(-50%) scale(1.05); }
 .prev-btn { left: 20px; }
 .next-btn { right: 20px; }
-.video-counter {
-    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: rgba(0,0,0,0.7); padding: 10px 20px;
-    border-radius: 25px; font-size: 1rem; z-index: 10;
-}
 .video-title {
     position: absolute; top: 20px; left: 20px;
     background: rgba(0,0,0,0.7); padding: 10px 20px;
@@ -440,7 +435,6 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
             </div>
             <button class="nav-arrow prev-btn" id="prevBtn" style="display:none;">&#8249;</button>
             <button class="nav-arrow next-btn" id="nextBtn" style="display:none;">&#8250;</button>
-            <div class="video-counter" id="videoCounter" style="display:none;"></div>
             <div class="video-title" id="videoTitle" style="display:none;"></div>
             <div class="video-controls" id="videoControls" style="display:none;">
                 <button class="ctrl-btn" id="playPauseBtn">Play/Pause</button>
@@ -455,7 +449,7 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
             <select id="videoDropdown" onchange="onVideoDropdownChange(this)"></select>
             <select id="txtDropdown" class="txt-select" onchange="onTxtDropdownChange(this)"></select>
         </div>
-        <div id="dropdownFileName" style="text-align:center;font-size:0.75rem;color:#aaa;margin-bottom:6px;word-break:break-all;display:none;"></div>
+        <div id="dropdownFileName" style="text-align:center;font-size:1.5rem;color:#aaa;margin-bottom:6px;word-break:break-all;display:none;"></div>
         <div class="thumbnail-strip" id="thumbnailStrip" style="display:none;"></div>
         <div class="instructions">
             ← → seek 5s &bull; [ ] prev/next video &bull; Space play/pause &bull; M mute &bull; R repeat &bull; F fullscreen &bull; Esc replay last pill
@@ -964,7 +958,6 @@ var currentIndex = 0;
 var looping = false;
 
 var mainVideo = document.getElementById('mainVideo');
-var videoCounter = document.getElementById('videoCounter');
 var videoTitle = document.getElementById('videoTitle');
 var thumbnailStrip = document.getElementById('thumbnailStrip');
 var loadingOverlay = document.getElementById('loadingOverlay');
@@ -1047,7 +1040,7 @@ function renderSavedTimes(times) {
 }
 
 function showPlayer(show) {
-    [prevBtn, nextBtn, videoCounter, videoTitle, videoControls].forEach(function(el) {
+    [prevBtn, nextBtn, videoTitle, videoControls].forEach(function(el) {
         el.style.display = show ? '' : 'none';
     });
     emptyState.style.display = show ? 'none' : '';
@@ -1122,7 +1115,7 @@ async function loadVideo(index) {
     }
 
     videoTitle.textContent = video.title;
-    videoCounter.textContent = (index + 1) + ' / ' + videos.length + ' — ' + video.title;
+    setDropdownFileName(video.title, index, videos.length);
 
     renderSavedTimes(video.times);
 
@@ -1559,7 +1552,6 @@ function onVideoDropdownChange(sel) {
     var idx = parseInt(sel.value);
     if (!isNaN(idx)) {
         loadVideo(idx);
-        setDropdownFileName(sel.options[sel.selectedIndex].textContent);
     }
 }
 
@@ -1585,13 +1577,22 @@ function onTxtDropdownChange(sel) {
     }
 }
 
-function setDropdownFileName(name) {
+function setDropdownFileName(name, index, total) {
     var el = document.getElementById('dropdownFileName');
     if (name) {
-        el.textContent = name;
+        el.innerHTML = '';
+        if (typeof index === 'number' && typeof total === 'number') {
+            var span = document.createElement('span');
+            span.style.color = '#fff';
+            span.textContent = (index + 1) + ' / ' + total;
+            el.appendChild(span);
+            el.appendChild(document.createTextNode(' — ' + name));
+        } else {
+            el.textContent = name;
+        }
         el.style.display = '';
     } else {
-        el.textContent = '';
+        el.innerHTML = '';
         el.style.display = 'none';
     }
 }
