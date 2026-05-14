@@ -207,17 +207,11 @@ def main():
         json.dump(all_playlists, f, indent=2, ensure_ascii=False)
     print(f'\n-> Wrote {len(all_playlists)} topic(s) to {playlists_path}')
 
-    # 4) Write topics.json (simple list)
-    topics_path = Path('./public/topics.json')
-    with open(topics_path, 'w', encoding='utf-8') as f:
-        json.dump(topics, f, indent=2, ensure_ascii=False)
-    print(f'-> Wrote {len(topics)} topic(s) to {topics_path}')
-
     print(f'Done. Processed {len(all_playlists)} topic(s).')
 
-    # Print rclone commands to sync to Dropbox
+    # Print rclone command to sync to Dropbox
     base = Path(__file__).resolve().parent / 'public'
-    print(f'\nrclone copy {base / "playlists.json"}  dropbox:/vercel && rclone copy {base / "topics.json"}  dropbox:/vercel')
+    print(f'\nrclone copy {base / "playlists.json"}  dropbox:/vercel')
     return 0
 
 

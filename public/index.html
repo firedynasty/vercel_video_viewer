@@ -506,44 +506,31 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 
 var _currentTopic = 'Home';
 var _allPlaylists = {};  // { topicName: { category: [entries] } }
-var DROPBOX_PLAYLISTS_URL = 'https://www.dropbox.com/scl/fi/32kq1u6ybxoze2dgscmcv/playlists.json?rlkey=xkhxj1ou4a2fu32wupfu46ngn&st=x6j7u03g&raw=1';
-var DROPBOX_TOPICS_URL = 'https://www.dropbox.com/scl/fi/308xt4lezq0o81v99vvd0/topics.json?rlkey=oe2llqxu5xml1g3vva24n2yws&st=a83ed5v0&raw=1';
-
-async function fetchWithFallback(dropboxUrl, localPath) {
+async function fetchPlaylists() {
     var res;
     try {
-        // Use proxy to avoid CORS issues with Dropbox
-        res = await fetch('/api/playlists?url=' + encodeURIComponent(dropboxUrl));
+        res = await fetch('/api/playlists');
     } catch (_) {}
-    if (!res || !res.ok) {
-        try { res = await fetch(dropboxUrl); } catch (_) {}
-    }
-    if (!res || !res.ok) res = await fetch(localPath);
+    if (!res || !res.ok) res = await fetch('playlists.json');
     return res;
 }
 
-async function loadTopics() {
-    try {
-        var res = await fetchWithFallback(DROPBOX_TOPICS_URL, 'topics.json');
-        if (!res.ok) return;
-        var topics = await res.json();
-        var menu = document.getElementById('topicMenu');
-        menu.innerHTML = '';
-        topics.forEach(function(name) {
-            var a = document.createElement('a');
-            a.href = '#';
-            a.textContent = name;
-            if (name === _currentTopic) a.className = 'current';
-            a.addEventListener('click', function(e) {
-                e.preventDefault();
-                switchTopic(name);
-                document.getElementById('topicDropdown').classList.remove('open');
-            });
-            menu.appendChild(a);
+function buildTopicMenu() {
+    var topics = Object.keys(_allPlaylists);
+    var menu = document.getElementById('topicMenu');
+    menu.innerHTML = '';
+    topics.forEach(function(name) {
+        var a = document.createElement('a');
+        a.href = '#';
+        a.textContent = name;
+        if (name === _currentTopic) a.className = 'current';
+        a.addEventListener('click', function(e) {
+            e.preventDefault();
+            switchTopic(name);
+            document.getElementById('topicDropdown').classList.remove('open');
         });
-    } catch (e) {
-        console.log('Could not load topics.json: ' + e.message);
-    }
+        menu.appendChild(a);
+    });
 }
 
 function switchTopic(topicName) {
@@ -1528,7 +1515,7 @@ function applyTextEntries(textEntries) {
 async function initPlaylists() {
     // Load all playlists (nested by topic)
     try {
-        var res = await fetchWithFallback(DROPBOX_PLAYLISTS_URL, 'playlists.json');
+        var res = await fetchPlaylists();
         if (res.ok) {
             _allPlaylists = await res.json();
         }
@@ -1536,8 +1523,8 @@ async function initPlaylists() {
         console.log('Failed to load playlists.json: ' + e.message);
     }
 
-    // Load topics dropdown
-    await loadTopics();
+    // Build topics from playlist keys
+    buildTopicMenu();
 
     // Select first topic
     var topicNames = Object.keys(_allPlaylists);

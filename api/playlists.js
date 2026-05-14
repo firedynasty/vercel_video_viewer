@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
-  const url = req.query.url;
+  const url = req.query.url || process.env.DROPBOX_PLAYLISTS_URL;
   if (!url) {
-    return res.status(400).json({ error: 'Missing ?url= parameter' });
+    return res.status(400).json({ error: 'Missing ?url= parameter or DROPBOX_PLAYLISTS_URL env var' });
   }
 
   try {
