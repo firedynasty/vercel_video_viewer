@@ -69,22 +69,28 @@ body {
 input:checked + .slider-toggle { background: linear-gradient(45deg, #FF5722, #E64A19); }
 input:checked + .slider-toggle:before { transform: translateX(20px); }
 
-/* Category buttons */
-#categoryBtnGroup {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    overflow-x: auto;
-    flex: 1;
-    min-width: 0;
-}
-.nav-cat-btn {
+/* Category dropdown */
+.nav-cat-dropdown { position: relative; }
+.nav-cat-dropdown-btn {
     background: linear-gradient(45deg, #43A047, #66BB6A);
+    display: flex; align-items: center; gap: 4px;
 }
-.nav-cat-btn.active {
-    background: linear-gradient(45deg, #1B5E20, #2E7D32);
-    box-shadow: 0 0 10px rgba(67, 160, 71, 0.6);
+.nav-cat-dropdown-btn:hover { background: linear-gradient(45deg, #2E7D32, #43A047); }
+.nav-cat-dropdown-menu {
+    display: none; position: absolute; top: 100%; left: 0;
+    background: #222; border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px; min-width: 140px; margin-top: 4px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 10001;
+    overflow: hidden;
 }
+.nav-cat-dropdown.open .nav-cat-dropdown-menu { display: block; }
+.nav-cat-dropdown-menu a {
+    display: block; padding: 8px 14px; color: #ddd;
+    text-decoration: none; font-size: 0.85rem;
+    transition: background 0.15s; cursor: pointer;
+}
+.nav-cat-dropdown-menu a:hover { background: rgba(255,255,255,0.1); }
+.nav-cat-dropdown-menu a.current { color: #81C784; font-weight: bold; }
 
 /* Topic dropdown */
 .nav-dropdown { position: relative; }
@@ -384,7 +390,10 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
         <button class="nav-btn-pill nav-dropdown-btn" onclick="toggleTopicDropdown()">Topics ▾</button>
         <div class="nav-dropdown-menu" id="topicMenu"></div>
     </div>
-    <div id="categoryBtnGroup"></div>
+    <div class="nav-cat-dropdown" id="categoryDropdown">
+        <button class="nav-btn-pill nav-cat-dropdown-btn" onclick="toggleCategoryDropdown()">Category ▾</button>
+        <div class="nav-cat-dropdown-menu" id="categoryMenu"></div>
+    </div>
     <button class="nav-btn-pill" onclick="openDropboxModal()" style="background:linear-gradient(135deg,#0061fe,#0050d0);">DB-nonrecursive</button>
     <button class="drop-folder-btn" id="dropFolderBtn"
         onclick="document.getElementById('folderInput').click()"
@@ -546,10 +555,12 @@ function switchTopic(topicName) {
 function toggleTopicDropdown() {
     document.getElementById('topicDropdown').classList.toggle('open');
 }
-// Close dropdown when clicking outside
+// Close dropdowns when clicking outside
 document.addEventListener('click', function(e) {
     var dd = document.getElementById('topicDropdown');
     if (!dd.contains(e.target)) dd.classList.remove('open');
+    var cd = document.getElementById('categoryDropdown');
+    if (!cd.contains(e.target)) cd.classList.remove('open');
 });
 
 // =====================================================================
@@ -1103,8 +1114,11 @@ async function loadVideo(index) {
     var src = video.src;
     var ytId = getYouTubeId(src);
 
+    console.log('[DEBUG loadVideo]', { src: src, ytId: ytId, ytReady: ytReady, index: index, title: video.title });
+
     if (ytId && ytReady) {
         // YouTube embed via API
+        console.log('[DEBUG YT] Embedding YouTube video', { ytId: ytId });
         isYouTube = true;
         mainVideo.style.display = 'none';
         youtubePlayerWrap.style.display = '';
@@ -1131,6 +1145,8 @@ async function loadVideo(index) {
         bufferBar.classList.add('hidden');
     } else {
         // Direct video
+        if (ytId && !ytReady) console.warn('[DEBUG YT] YouTube ID found but API not ready!', { ytId: ytId, ytReady: ytReady });
+        console.log('[DEBUG] Playing as direct video', { src: src });
         isYouTube = false;
         youtubePlayerWrap.style.display = 'none';
         if (ytPlayer) { ytPlayer.destroy(); ytPlayer = null; }
@@ -1472,24 +1488,31 @@ var playlistData = {};
 var currentCategory = '';
 
 function buildCategoryButtons() {
-    var group = document.getElementById('categoryBtnGroup');
-    group.innerHTML = '';
+    var menu = document.getElementById('categoryMenu');
+    menu.innerHTML = '';
     Object.keys(playlistData).forEach(function(cat) {
-        var btn = document.createElement('button');
-        btn.className = 'nav-btn-pill nav-cat-btn';
-        btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
-        btn.dataset.category = cat;
-        btn.addEventListener('click', function() { selectCategory(cat); });
-        group.appendChild(btn);
+        var a = document.createElement('a');
+        a.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+        a.dataset.category = cat;
+        a.addEventListener('click', function() {
+            selectCategory(cat);
+            document.getElementById('categoryDropdown').classList.remove('open');
+        });
+        menu.appendChild(a);
     });
+}
+
+function toggleCategoryDropdown() {
+    document.getElementById('categoryDropdown').classList.toggle('open');
 }
 
 function selectCategory(cat) {
     currentCategory = cat;
-    // Update button active states
-    document.querySelectorAll('.nav-cat-btn').forEach(function(btn) {
-        btn.classList.toggle('active', btn.dataset.category === cat);
+    // Update dropdown active states
+    document.querySelectorAll('#categoryMenu a').forEach(function(a) {
+        a.classList.toggle('current', a.dataset.category === cat);
     });
+    document.querySelector('.nav-cat-dropdown-btn').textContent = (cat.charAt(0).toUpperCase() + cat.slice(1)) + ' ▾';
     // Split entries into videos (have url) and text-only (have times but no url)
     var entries = playlistData[cat] || [];
     var videoList = [];
