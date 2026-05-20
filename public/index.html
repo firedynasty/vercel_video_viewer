@@ -456,6 +456,7 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
         <div id="savedTimesButtons" style="display:none;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;"></div>
         <div style="text-align:center;margin-bottom:8px;">
             <input id="addTimeInput" type="text" placeholder="0:07" style="width:60px;padding:4px 8px;border:1px solid #555;border-radius:12px;background:#222;color:#fff;font-size:12px;text-align:center;">
+            <button id="copyTimesBtn" title="Copy name + times to clipboard" style="display:none;background:#333;border:1px solid #555;color:#ccc;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;margin-left:6px;" onclick="copyTimesToClipboard()">Copy</button>
         </div>
         <div class="dropdown-row" id="dropdownRow">
             <select id="videoDropdown" onchange="onVideoDropdownChange(this)"></select>
@@ -1089,6 +1090,28 @@ addTimeInput.addEventListener('input', function() {
     }
 });
 
+function copyTimesToClipboard() {
+    if (!videos.length || currentIndex < 0) return;
+    var video = videos[currentIndex];
+    var parts = [video.title];
+    // Collect times from saved-time-btn buttons (includes both playlist times and manually added ones)
+    document.querySelectorAll('.saved-time-btn').forEach(function(btn) {
+        var time = btn.dataset.time;
+        var label = btn.title;
+        if (label && label !== time) {
+            parts.push(time + ' (' + label + ')');
+        } else {
+            parts.push(time);
+        }
+    });
+    var text = parts.join(', ');
+    navigator.clipboard.writeText(text).then(function() {
+        var btn = document.getElementById('copyTimesBtn');
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+    });
+}
+
 function showPlayer(show) {
     [prevBtn, nextBtn, videoTitle, videoControls].forEach(function(el) {
         el.style.display = show ? '' : 'none';
@@ -1098,6 +1121,7 @@ function showPlayer(show) {
         mainVideo.style.display = 'none';
         youtubePlayerWrap.style.display = 'none';
         savedTimesContainer.style.display = 'none';
+        document.getElementById('copyTimesBtn').style.display = 'none';
     }
 }
 
@@ -1173,6 +1197,7 @@ async function loadVideo(index) {
     setDropdownFileName(video.title, index, videos.length);
 
     renderSavedTimes(video.times);
+    document.getElementById('copyTimesBtn').style.display = '';
 
     document.querySelectorAll('.thumb-btn:not(.txt-file)').forEach(function(btn, i) {
         btn.classList.toggle('active', i === index);
