@@ -1624,9 +1624,12 @@ async function initPlaylists() {
     var urlList = params.get('list');
     var topicNames = Object.keys(_allPlaylists);
 
-    if (urlTopic && _allPlaylists[urlTopic]) {
-        switchTopic(urlTopic);
-        if (urlList && playlistData[urlList]) selectCategory(urlList);
+    var matchedTopic = urlTopic && topicNames.find(function(t) { return t.toLowerCase() === urlTopic.toLowerCase(); });
+    if (matchedTopic) {
+        switchTopic(matchedTopic);
+        var catKeys = Object.keys(playlistData);
+        var matchedList = urlList && catKeys.find(function(c) { return c.toLowerCase() === urlList.toLowerCase(); });
+        if (matchedList) selectCategory(matchedList);
     } else if (topicNames.length) {
         switchTopic(topicNames[0]);
     }
