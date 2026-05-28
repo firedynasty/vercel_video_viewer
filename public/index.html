@@ -395,13 +395,14 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
         <button class="nav-btn-pill nav-cat-dropdown-btn" onclick="toggleCategoryDropdown()">Category ▾</button>
         <div class="nav-cat-dropdown-menu" id="categoryMenu"></div>
     </div>
-    <button class="nav-btn-pill" onclick="openDropboxModal()" style="background:linear-gradient(135deg,#0061fe,#0050d0);">DB-nonrecursive</button>
-    <button class="drop-folder-btn" id="dropFolderBtn"
+    <button class="nav-btn-pill" onclick="openDropboxModal()" style="display:none;background:linear-gradient(135deg,#0061fe,#0050d0);">DB-nonrecursive</button>
+    <button class="drop-folder-btn" id="dropFolderBtn" style="display:none;"
         onclick="document.getElementById('folderInput').click()"
         ondragover="event.preventDefault(); this.classList.add('dragover')"
         ondragleave="this.classList.remove('dragover')"
         ondrop="handleFolderDrop(event); this.classList.remove('dragover')">Drop Folder</button>
     <input type="file" id="folderInput" style="display:none" webkitdirectory="" directory="" multiple onchange="handleFolderSelect(this.files)" />
+    <select id="videoDropdown" onchange="onVideoDropdownChange(this)" style="background:#222;color:#fff;border:1px solid #555;border-radius:6px;padding:4px 8px;font-size:0.8rem;max-width:300px;"></select>
     <div class="nav-spacer"></div>
 </div>
 
@@ -460,7 +461,6 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
             <button id="copyTimesBtn" title="Copy name + times to clipboard" style="display:none;background:#333;border:1px solid #555;color:#ccc;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;margin-left:6px;" onclick="copyTimesToClipboard()">Copy</button>
         </div>
         <div class="dropdown-row" id="dropdownRow">
-            <select id="videoDropdown" onchange="onVideoDropdownChange(this)"></select>
             <select id="txtDropdown" class="txt-select" onchange="onTxtDropdownChange(this)"></select>
         </div>
         <div id="dropdownFileName" style="text-align:center;font-size:1.5rem;color:#aaa;margin-bottom:6px;word-break:break-all;display:none;"></div>
