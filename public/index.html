@@ -385,11 +385,12 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 
 <!-- Navbar -->
 <div class="top-navbar">
-    <span class="nav-title" id="navTitle">Video Viewer</span>
+    <span id="topicLabel" style="color:#aaa;font-size:0.85rem;margin-right:2px;">topic:</span>
     <div class="nav-dropdown" id="topicDropdown">
         <button class="nav-btn-pill nav-dropdown-btn" onclick="toggleTopicDropdown()">Topics ▾</button>
         <div class="nav-dropdown-menu" id="topicMenu"></div>
     </div>
+    <span id="listLabel" style="color:#aaa;font-size:0.85rem;margin-right:2px;">list:</span>
     <div class="nav-cat-dropdown" id="categoryDropdown">
         <button class="nav-btn-pill nav-cat-dropdown-btn" onclick="toggleCategoryDropdown()">Category ▾</button>
         <div class="nav-cat-dropdown-menu" id="categoryMenu"></div>
@@ -542,7 +543,7 @@ function buildTopicMenu() {
 
 function switchTopic(topicName) {
     _currentTopic = topicName;
-    document.getElementById('navTitle').textContent = topicName || 'Video Viewer';
+    document.querySelector('.nav-dropdown-btn').textContent = (topicName || 'Topics') + ' ▾';
     document.title = (topicName || 'Video Viewer') + ' — Video Viewer';
     document.querySelectorAll('#topicMenu a').forEach(function(a) {
         a.classList.toggle('current', a.textContent === topicName);
@@ -551,10 +552,20 @@ function switchTopic(topicName) {
     buildCategoryButtons();
     var keys = Object.keys(playlistData);
     if (keys.length) selectCategory(keys[0]); else showPlayer(false);
+    updateURLParams();
 }
 
 function toggleTopicDropdown() {
     document.getElementById('topicDropdown').classList.toggle('open');
+}
+
+function updateURLParams() {
+    var params = new URLSearchParams(window.location.search);
+    if (_currentTopic) params.set('topic', _currentTopic); else params.delete('topic');
+    if (currentCategory) params.set('list', currentCategory); else params.delete('list');
+    var qs = params.toString();
+    var newURL = window.location.pathname + (qs ? '?' + qs : '');
+    window.history.replaceState({}, '', newURL);
 }
 // Close dropdowns when clicking outside
 document.addEventListener('click', function(e) {
@@ -1538,6 +1549,7 @@ function selectCategory(cat) {
         a.classList.toggle('current', a.dataset.category === cat);
     });
     document.querySelector('.nav-cat-dropdown-btn').textContent = (cat.charAt(0).toUpperCase() + cat.slice(1)) + ' ▾';
+    updateURLParams();
     // Split entries into videos (have url) and text-only (have times but no url)
     var entries = playlistData[cat] || [];
     var videoList = [];
@@ -1606,9 +1618,16 @@ async function initPlaylists() {
     // Build topics from playlist keys
     buildTopicMenu();
 
-    // Select first topic
+    // Check URL params for topic and list
+    var params = new URLSearchParams(window.location.search);
+    var urlTopic = params.get('topic');
+    var urlList = params.get('list');
     var topicNames = Object.keys(_allPlaylists);
-    if (topicNames.length) {
+
+    if (urlTopic && _allPlaylists[urlTopic]) {
+        switchTopic(urlTopic);
+        if (urlList && playlistData[urlList]) selectCategory(urlList);
+    } else if (topicNames.length) {
         switchTopic(topicNames[0]);
     }
 }
