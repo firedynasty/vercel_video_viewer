@@ -563,6 +563,8 @@ function updateURLParams() {
     var params = new URLSearchParams(window.location.search);
     if (_currentTopic) params.set('topic', _currentTopic); else params.delete('topic');
     if (currentCategory) params.set('list', currentCategory); else params.delete('list');
+    var key = getSelectKey(currentIndex);
+    if (key && currentIndex > 0) params.set('select', key); else params.delete('select');
     var qs = params.toString();
     var newURL = window.location.pathname + (qs ? '?' + qs : '');
     window.history.replaceState({}, '', newURL);
@@ -1274,6 +1276,31 @@ mainVideo.addEventListener('error', function() {
     if (videos[currentIndex]) videoTitle.textContent = videos[currentIndex].title + ' (failed to load)';
 });
 
+// Generate select keys: first word (up to first space) + group index
+function buildSelectKeys(videoList) {
+    var counts = {};
+    return videoList.map(function(video) {
+        var firstWord = video.title.split(' ')[0];
+        if (!(firstWord in counts)) counts[firstWord] = 0;
+        return firstWord + (counts[firstWord]++);
+    });
+}
+
+var _selectKeys = [];
+
+function getSelectKey(index) {
+    return _selectKeys[index] || '';
+}
+
+function findIndexBySelectKey(key) {
+    if (!key) return -1;
+    var lower = key.toLowerCase();
+    for (var i = 0; i < _selectKeys.length; i++) {
+        if (_selectKeys[i].toLowerCase() === lower) return i;
+    }
+    return -1;
+}
+
 function buildThumbnails() {
     thumbnailStrip.innerHTML = '';
     var videoDD = document.getElementById('videoDropdown');
@@ -1281,6 +1308,7 @@ function buildThumbnails() {
     videoDD.innerHTML = '';
     txtDD.innerHTML = '<option value="">-- text files --</option>';
     txtDD.style.display = 'none';
+    _selectKeys = buildSelectKeys(videos);
     videos.forEach(function(video, index) {
         var btn = document.createElement('button');
         btn.className = 'thumb-btn';
@@ -1624,12 +1652,23 @@ async function initPlaylists() {
     var urlList = params.get('list');
     var topicNames = Object.keys(_allPlaylists);
 
+    var urlSelect = params.get('select');
+
     var matchedTopic = urlTopic && topicNames.find(function(t) { return t.toLowerCase() === urlTopic.toLowerCase(); });
     if (matchedTopic) {
         switchTopic(matchedTopic);
         var catKeys = Object.keys(playlistData);
         var matchedList = urlList && catKeys.find(function(c) { return c.toLowerCase() === urlList.toLowerCase(); });
-        if (matchedList) selectCategory(matchedList);
+        if (matchedList) {
+            selectCategory(matchedList);
+            // selectCategory uses a 200ms fade timeout, so defer select param
+            if (urlSelect) {
+                setTimeout(function() {
+                    var idx = findIndexBySelectKey(urlSelect);
+                    if (idx >= 0) loadVideo(idx);
+                }, 250);
+            }
+        }
     } else if (topicNames.length) {
         switchTopic(topicNames[0]);
     }
@@ -1661,6 +1700,7 @@ function onVideoDropdownChange(sel) {
     var idx = parseInt(sel.value);
     if (!isNaN(idx)) {
         loadVideo(idx);
+        updateURLParams();
     }
 }
 
