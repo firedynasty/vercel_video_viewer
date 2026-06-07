@@ -2150,6 +2150,18 @@ function renderCacheList() {
             note.textContent = 'Dropbox (no pre-cache)';
             div.appendChild(note);
         } else if (isCached) {
+            // Clicking the row loads the video
+            div.style.cursor = 'pointer';
+            div.title = 'Click to play';
+            div.addEventListener('click', (function(idx) {
+                return function(e) {
+                    if (e.target.classList.contains('cache-item-del')) return;
+                    closeCacheModal();
+                    loadVideo(idx);
+                };
+            })(i));
+            name.style.color = '#90CAF9';
+
             var delBtn = document.createElement('button');
             delBtn.className = 'cache-item-del';
             delBtn.innerHTML = '&times;';
