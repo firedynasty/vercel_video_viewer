@@ -8,34 +8,30 @@ self.addEventListener('activate', function(event) {
     event.waitUntil(self.clients.claim());
 });
 
-// Intercept fetch requests — serve cached videos if available
+// Serve from cache ONLY if we have a cached copy.
+// Never intercept uncached requests — let the browser handle them normally.
+// This avoids breaking cross-origin Dropbox requests, range requests, etc.
 self.addEventListener('fetch', function(event) {
     var url = event.request.url;
-
-    // Only cache video requests (Dropbox raw links and common video extensions)
     if (!isVideoRequest(url)) return;
 
     event.respondWith(
         caches.open(CACHE_NAME).then(function(cache) {
-            return cache.match(event.request).then(function(cached) {
+            return cache.match(event.request, { ignoreSearch: true }).then(function(cached) {
                 if (cached) return cached;
-                return fetch(event.request).then(function(response) {
-                    // Only cache successful responses
-                    if (response.ok) {
-                        cache.put(event.request, response.clone());
-                    }
-                    return response;
-                });
+                // No cache hit — pass through to network without interfering
+                return fetch(event.request);
             });
+        }).catch(function() {
+            // If anything fails, fall through to normal network
+            return fetch(event.request);
         })
     );
 });
 
 function isVideoRequest(url) {
     var lower = url.toLowerCase();
-    // Dropbox raw links
-    if (lower.indexOf('dropbox.com') !== -1 && lower.indexOf('raw=1') !== -1) return true;
-    // Common video extensions
+    if (lower.indexOf('dropbox.com') !== -1) return true;
     var exts = ['.mp4', '.webm', '.ogg', '.mov', '.m4v'];
     for (var i = 0; i < exts.length; i++) {
         if (lower.indexOf(exts[i]) !== -1) return true;
@@ -48,19 +44,24 @@ self.addEventListener('message', function(event) {
     var msg = event.data;
 
     if (msg.type === 'PRECACHE_VIDEO') {
-        // Download and cache a video URL
         caches.open(CACHE_NAME).then(function(cache) {
-            var request = new Request(msg.url);
-            cache.match(request).then(function(existing) {
+            // Check by URL ignoring query string differences
+            cache.match(new Request(msg.url), { ignoreSearch: true }).then(function(existing) {
                 if (existing) {
-                    // Already cached
                     notifyClient(event.source, { type: 'PRECACHE_DONE', url: msg.url, alreadyCached: true });
                     return;
                 }
-                fetch(request).then(function(response) {
-                    if (response.ok) {
-                        cache.put(request, response.clone());
-                        notifyClient(event.source, { type: 'PRECACHE_DONE', url: msg.url, size: parseInt(response.headers.get('content-length') || '0') });
+                // Fetch with no-cors to handle cross-origin Dropbox URLs
+                fetch(msg.url, { mode: 'no-cors' }).then(function(response) {
+                    // Opaque responses (type === 'opaque') have status 0,
+                    // but are still valid and cacheable
+                    if (response.ok || response.type === 'opaque') {
+                        cache.put(msg.url, response.clone());
+                        notifyClient(event.source, {
+                            type: 'PRECACHE_DONE',
+                            url: msg.url,
+                            size: parseInt(response.headers.get('content-length') || '0')
+                        });
                     } else {
                         notifyClient(event.source, { type: 'PRECACHE_ERROR', url: msg.url, error: 'HTTP ' + response.status });
                     }
@@ -73,7 +74,7 @@ self.addEventListener('message', function(event) {
 
     if (msg.type === 'DELETE_CACHED') {
         caches.open(CACHE_NAME).then(function(cache) {
-            cache.delete(new Request(msg.url)).then(function(deleted) {
+            cache.delete(new Request(msg.url), { ignoreSearch: true }).then(function(deleted) {
                 notifyClient(event.source, { type: 'DELETE_DONE', url: msg.url, deleted: deleted });
             });
         });
