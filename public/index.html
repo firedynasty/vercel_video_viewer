@@ -1316,7 +1316,9 @@ async function loadVideo(index) {
             }
         }
 
-        mainVideo.src = src;
+        // Use cached blob URL if available (avoids network for pre-cached videos)
+        var blobUrl = await resolveCachedBlobUrl(src);
+        mainVideo.src = blobUrl || src;
         mainVideo.loop = looping;
         mainVideo.load();
     }
@@ -2006,14 +2008,32 @@ var _cacheDownloadTotal = 0;
 var CACHE_WARN_MB = 300;
 var CACHE_LIMIT_MB = 500;
 
-// Register service worker (only used to serve cached videos on fetch)
+// Register service worker
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(function(err) {
         console.warn('SW registration failed:', err);
     });
 }
 
-// All cache operations use the Cache API directly from the main page
+// All cache operations use the Cache API directly from the main page.
+// Cached videos are served as blob URLs to avoid SW fetch interception issues.
+
+var _blobUrlCache = {}; // src -> blob URL, to avoid re-creating blobs
+
+async function resolveCachedBlobUrl(src) {
+    if (_blobUrlCache[src]) return _blobUrlCache[src];
+    try {
+        var cache = await caches.open(CACHE_NAME);
+        var match = await cache.match(src);
+        if (!match) return null;
+        var blob = await match.blob();
+        var blobUrl = URL.createObjectURL(blob);
+        _blobUrlCache[src] = blobUrl;
+        return blobUrl;
+    } catch (e) {
+        return null;
+    }
+}
 
 function openCacheModal() {
     document.getElementById('cacheOverlay').classList.add('open');
@@ -2081,6 +2101,7 @@ async function deleteOneVideo(url) {
     var cache = await caches.open(CACHE_NAME);
     await cache.delete(url);
     _cachedUrls.delete(url);
+    if (_blobUrlCache[url]) { URL.revokeObjectURL(_blobUrlCache[url]); delete _blobUrlCache[url]; }
 }
 
 function renderCacheList() {
@@ -2274,6 +2295,8 @@ async function cacheClearAll() {
     if (!confirm('Delete all cached videos?')) return;
     await caches.delete(CACHE_NAME);
     _cachedUrls.clear();
+    Object.keys(_blobUrlCache).forEach(function(u) { URL.revokeObjectURL(_blobUrlCache[u]); });
+    _blobUrlCache = {};
     renderCacheList();
     refreshCacheSize();
     var prog = document.getElementById('cacheProgress');
