@@ -612,6 +612,7 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
             <div class="cache-warn-msg" id="cacheWarnMsg">Cache is getting large. Consider deleting some videos.</div>
         </div>
         <div class="cache-actions">
+            <button class="cache-act-btn download" id="cacheSaveCurrentBtn" onclick="cacheSaveCurrent()">Save Current</button>
             <button class="cache-act-btn download" id="cacheDownloadAllBtn" onclick="cacheDownloadAll()">Download All</button>
             <button class="cache-act-btn danger" id="cacheClearBtn" onclick="cacheClearAll()">Delete All</button>
         </div>
@@ -2174,6 +2175,13 @@ function renderCacheList() {
 
     document.getElementById('cacheHeaderInfo').textContent = cachedCount + ' / ' + videos.length + ' cached';
     document.getElementById('cacheDownloadAllBtn').disabled = cachedCount === videos.length;
+    // Update Save Current button state
+    var scBtn = document.getElementById('cacheSaveCurrentBtn');
+    var curVideo = videos[currentIndex];
+    var curCached = curVideo && _cachedUrls.has(curVideo.src);
+    var curIsDropbox = curVideo && curVideo.src.startsWith('__dropbox__');
+    scBtn.disabled = !curVideo || curCached || curIsDropbox;
+    scBtn.textContent = curCached ? 'Current Saved' : 'Save Current';
     refreshCacheSize();
 }
 
@@ -2230,6 +2238,23 @@ function updateCacheProgress() {
     var prog = document.getElementById('cacheProgress');
     prog.style.display = '';
     prog.textContent = 'Downloading ' + _cacheDownloadDone + ' / ' + _cacheDownloadTotal + '...';
+}
+
+function cacheSaveCurrent() {
+    if (!videos.length || currentIndex < 0) return;
+    var video = videos[currentIndex];
+    if (!video || video.src.startsWith('__dropbox__')) return;
+    if (_cachedUrls.has(video.src)) return;
+    // Mark as downloading in the list
+    var item = document.querySelector('[data-cache-url="' + CSS.escape(video.src) + '"]');
+    if (item) {
+        var d = item.querySelector('.cache-item-status');
+        if (d) d.className = 'cache-item-status downloading';
+    }
+    swPost({ type: 'PRECACHE_VIDEO', url: video.src });
+    var btn = document.getElementById('cacheSaveCurrentBtn');
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
 }
 
 function cacheClearAll() {
