@@ -378,6 +378,94 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 }
 .db-load-btn:hover { box-shadow: 0 2px 8px rgba(0,97,254,0.4); }
 .db-loading { padding: 20px; text-align: center; color: #888; font-size: 0.85rem; }
+
+/* ===== CACHE MANAGER MODAL ===== */
+.cache-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.75); z-index: 10000;
+    display: none; align-items: center; justify-content: center;
+}
+.cache-overlay.open { display: flex; }
+.cache-modal {
+    background: #2a2a2a; border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px; width: 560px; max-width: 95vw;
+    max-height: 80vh; display: flex; flex-direction: column;
+    overflow: hidden;
+}
+.cache-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.1);
+    flex-shrink: 0;
+}
+.cache-header h3 { font-size: 1rem; flex: 1; }
+.cache-close {
+    background: none; border: none; color: #888;
+    font-size: 1.4rem; cursor: pointer; padding: 0 4px; line-height: 1;
+}
+.cache-close:hover { color: #fff; }
+.cache-size-bar {
+    padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.07);
+    flex-shrink: 0;
+}
+.cache-size-track {
+    height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px;
+    overflow: hidden; margin-bottom: 6px;
+}
+.cache-size-fill {
+    height: 100%; background: linear-gradient(90deg, #4CAF50, #66BB6A);
+    border-radius: 4px; transition: width 0.3s;
+}
+.cache-size-fill.warn { background: linear-gradient(90deg, #FF9800, #F57C00); }
+.cache-size-fill.danger { background: linear-gradient(90deg, #f44336, #d32f2f); }
+.cache-size-info {
+    display: flex; justify-content: space-between; font-size: 0.75rem; color: #999;
+}
+.cache-warn-msg {
+    color: #FF9800; font-size: 0.78rem; margin-top: 4px; display: none;
+}
+.cache-actions {
+    display: flex; gap: 8px; padding: 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.07); flex-shrink: 0;
+}
+.cache-act-btn {
+    border: 1px solid rgba(255,255,255,0.18); color: #ddd;
+    padding: 6px 14px; border-radius: 4px; cursor: pointer;
+    font-size: 0.8rem; font-weight: 600; transition: all 0.2s;
+}
+.cache-act-btn:hover { background: rgba(255,255,255,0.15); }
+.cache-act-btn:disabled { opacity: 0.4; cursor: default; }
+.cache-act-btn.download { background: linear-gradient(45deg, #1565C0, #1E88E5); border-color: transparent; color: white; }
+.cache-act-btn.download:hover { box-shadow: 0 2px 8px rgba(21,101,192,0.4); }
+.cache-act-btn.danger { color: #f88; border-color: rgba(248,136,136,0.3); background: none; }
+.cache-act-btn.danger:hover { background: rgba(248,136,136,0.1); }
+.cache-list {
+    flex: 1; overflow-y: auto; min-height: 100px;
+}
+.cache-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.85rem;
+}
+.cache-item-name { flex: 1; color: #ccc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cache-item-size { color: #888; font-size: 0.75rem; white-space: nowrap; }
+.cache-item-status {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.cache-item-status.cached { background: #4CAF50; }
+.cache-item-status.not-cached { background: #555; }
+.cache-item-status.downloading { background: #FF9800; animation: pulse-dot 1s infinite; }
+.cache-item-status.error { background: #f44336; }
+@keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+.cache-item-del {
+    background: none; border: none; color: #666; cursor: pointer;
+    font-size: 1rem; padding: 0 4px; line-height: 1;
+}
+.cache-item-del:hover { color: #f44; }
+.cache-progress {
+    padding: 8px 16px; border-top: 1px solid rgba(255,255,255,0.07);
+    font-size: 0.78rem; color: #888; flex-shrink: 0; display: none;
+}
+.cache-empty { padding: 30px; text-align: center; color: #666; font-size: 0.85rem; }
     </style>
 <script src="https://www.youtube.com/iframe_api"></script>
 </head>
@@ -403,6 +491,7 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
         ondrop="handleFolderDrop(event); this.classList.remove('dragover')">Drop Folder</button>
     <input type="file" id="folderInput" style="display:none" webkitdirectory="" directory="" multiple onchange="handleFolderSelect(this.files)" />
     <select id="videoDropdown" onchange="onVideoDropdownChange(this)" style="background:#222;color:#fff;border:1px solid #555;border-radius:6px;padding:4px 8px;font-size:0.8rem;max-width:300px;"></select>
+    <button class="nav-btn-pill" onclick="openCacheModal()" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);" id="cacheBtn">Cache</button>
     <div class="nav-spacer"></div>
 </div>
 
@@ -503,6 +592,31 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
                 <button class="db-load-btn" id="dbLoadBtn" onclick="dbLoadFolder()">Load Videos</button>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Cache Manager Modal -->
+<div class="cache-overlay" id="cacheOverlay" onclick="if(event.target===this)closeCacheModal()">
+    <div class="cache-modal" onclick="event.stopPropagation()">
+        <div class="cache-header">
+            <h3>Cache Manager</h3>
+            <span id="cacheHeaderInfo" style="font-size:0.75rem;color:#888;"></span>
+            <button class="cache-close" onclick="closeCacheModal()">&times;</button>
+        </div>
+        <div class="cache-size-bar">
+            <div class="cache-size-track"><div class="cache-size-fill" id="cacheSizeFill"></div></div>
+            <div class="cache-size-info">
+                <span id="cacheSizeUsed">0 MB used</span>
+                <span id="cacheSizeLimit">Limit: ~500 MB</span>
+            </div>
+            <div class="cache-warn-msg" id="cacheWarnMsg">Cache is getting large. Consider deleting some videos.</div>
+        </div>
+        <div class="cache-actions">
+            <button class="cache-act-btn download" id="cacheDownloadAllBtn" onclick="cacheDownloadAll()">Download All</button>
+            <button class="cache-act-btn danger" id="cacheClearBtn" onclick="cacheClearAll()">Delete All</button>
+        </div>
+        <div class="cache-list" id="cacheList"></div>
+        <div class="cache-progress" id="cacheProgress"></div>
     </div>
 </div>
 
@@ -1877,6 +1991,255 @@ function parseTxtAsTimes(text) {
 
 showPlayer(false);
 initPlaylists();
+
+// =====================================================================
+// SERVICE WORKER REGISTRATION & CACHE MANAGER
+// =====================================================================
+
+var _swReady = false;
+var _cachedUrls = new Set();
+var _cacheDownloading = false;
+var _cacheDownloadQueue = [];
+var _cacheDownloadDone = 0;
+var _cacheDownloadTotal = 0;
+var CACHE_WARN_MB = 300;
+var CACHE_LIMIT_MB = 500;
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(function(reg) {
+        _swReady = true;
+        // Listen for messages from the service worker
+        navigator.serviceWorker.addEventListener('message', handleSwMessage);
+    }).catch(function(err) {
+        console.warn('SW registration failed:', err);
+    });
+}
+
+function handleSwMessage(event) {
+    var msg = event.data;
+    if (msg.type === 'CACHE_STATUS') {
+        _cachedUrls = new Set(msg.urls);
+        renderCacheList();
+    }
+    if (msg.type === 'PRECACHE_DONE') {
+        _cachedUrls.add(msg.url);
+        _cacheDownloadDone++;
+        updateCacheProgress();
+        renderCacheList();
+        // Continue queue
+        processNextCacheDownload();
+    }
+    if (msg.type === 'PRECACHE_ERROR') {
+        _cacheDownloadDone++;
+        updateCacheProgress();
+        // Mark as error in UI
+        var item = document.querySelector('[data-cache-url="' + CSS.escape(msg.url) + '"]');
+        if (item) {
+            var dot = item.querySelector('.cache-item-status');
+            if (dot) { dot.className = 'cache-item-status error'; dot.title = msg.error; }
+        }
+        processNextCacheDownload();
+    }
+    if (msg.type === 'DELETE_DONE') {
+        _cachedUrls.delete(msg.url);
+        renderCacheList();
+        refreshCacheSize();
+    }
+    if (msg.type === 'CLEAR_ALL_DONE') {
+        _cachedUrls.clear();
+        renderCacheList();
+        refreshCacheSize();
+    }
+}
+
+function swPost(msg) {
+    if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage(msg);
+    }
+}
+
+function openCacheModal() {
+    document.getElementById('cacheOverlay').classList.add('open');
+    refreshCacheStatus();
+    refreshCacheSize();
+}
+
+function closeCacheModal() {
+    document.getElementById('cacheOverlay').classList.remove('open');
+}
+
+function refreshCacheStatus() {
+    swPost({ type: 'GET_CACHE_STATUS' });
+}
+
+async function refreshCacheSize() {
+    if (!navigator.storage || !navigator.storage.estimate) {
+        document.getElementById('cacheSizeUsed').textContent = 'Size unavailable';
+        return;
+    }
+    var est = await navigator.storage.estimate();
+    var usedMB = ((est.usage || 0) / (1024 * 1024)).toFixed(1);
+    var quotaMB = ((est.quota || 0) / (1024 * 1024)).toFixed(0);
+    document.getElementById('cacheSizeUsed').textContent = usedMB + ' MB used';
+    document.getElementById('cacheSizeLimit').textContent = 'Quota: ~' + quotaMB + ' MB';
+
+    var pct = Math.min(100, (parseFloat(usedMB) / CACHE_LIMIT_MB) * 100);
+    var fill = document.getElementById('cacheSizeFill');
+    fill.style.width = pct + '%';
+    fill.className = 'cache-size-fill';
+    var warn = document.getElementById('cacheWarnMsg');
+
+    if (parseFloat(usedMB) > CACHE_LIMIT_MB) {
+        fill.classList.add('danger');
+        warn.textContent = 'Cache is very large (' + usedMB + ' MB). Delete some videos to free space.';
+        warn.style.display = '';
+    } else if (parseFloat(usedMB) > CACHE_WARN_MB) {
+        fill.classList.add('warn');
+        warn.textContent = 'Cache is getting large (' + usedMB + ' MB). Consider deleting some videos.';
+        warn.style.display = '';
+    } else {
+        warn.style.display = 'none';
+    }
+}
+
+function renderCacheList() {
+    var list = document.getElementById('cacheList');
+    list.innerHTML = '';
+
+    if (!videos.length) {
+        list.innerHTML = '<div class="cache-empty">No videos in current playlist.<br>Select a category first.</div>';
+        document.getElementById('cacheDownloadAllBtn').disabled = true;
+        document.getElementById('cacheHeaderInfo').textContent = '';
+        return;
+    }
+
+    var cachedCount = 0;
+    videos.forEach(function(video, i) {
+        var src = video.src;
+        // Skip Dropbox placeholder URLs (can't pre-cache without auth token)
+        var isDropboxPlaceholder = src.startsWith('__dropbox__');
+        var isCached = _cachedUrls.has(src);
+        if (isCached) cachedCount++;
+
+        var div = document.createElement('div');
+        div.className = 'cache-item';
+        div.setAttribute('data-cache-url', src);
+
+        var dot = document.createElement('div');
+        dot.className = 'cache-item-status ' + (isCached ? 'cached' : 'not-cached');
+        dot.title = isCached ? 'Cached' : 'Not cached';
+
+        var name = document.createElement('div');
+        name.className = 'cache-item-name';
+        name.textContent = video.title;
+        name.title = video.title;
+
+        div.appendChild(dot);
+        div.appendChild(name);
+
+        if (isDropboxPlaceholder) {
+            var note = document.createElement('span');
+            note.className = 'cache-item-size';
+            note.textContent = 'Dropbox (no pre-cache)';
+            div.appendChild(note);
+        } else if (isCached) {
+            var delBtn = document.createElement('button');
+            delBtn.className = 'cache-item-del';
+            delBtn.innerHTML = '&times;';
+            delBtn.title = 'Delete from cache';
+            delBtn.addEventListener('click', (function(url) {
+                return function() { swPost({ type: 'DELETE_CACHED', url: url }); };
+            })(src));
+            div.appendChild(delBtn);
+        } else {
+            var dlBtn = document.createElement('button');
+            dlBtn.className = 'cache-act-btn download';
+            dlBtn.textContent = 'Save';
+            dlBtn.style.cssText = 'padding:3px 10px;font-size:0.72rem;';
+            dlBtn.addEventListener('click', (function(url) {
+                return function() {
+                    var item = document.querySelector('[data-cache-url="' + CSS.escape(url) + '"]');
+                    if (item) {
+                        var d = item.querySelector('.cache-item-status');
+                        if (d) d.className = 'cache-item-status downloading';
+                    }
+                    swPost({ type: 'PRECACHE_VIDEO', url: url });
+                };
+            })(src));
+            div.appendChild(dlBtn);
+        }
+
+        list.appendChild(div);
+    });
+
+    document.getElementById('cacheHeaderInfo').textContent = cachedCount + ' / ' + videos.length + ' cached';
+    document.getElementById('cacheDownloadAllBtn').disabled = cachedCount === videos.length;
+    refreshCacheSize();
+}
+
+function cacheDownloadAll() {
+    if (_cacheDownloading) return;
+    // Build queue of uncached, non-dropbox-placeholder videos
+    _cacheDownloadQueue = [];
+    videos.forEach(function(video) {
+        if (video.src.startsWith('__dropbox__')) return;
+        if (_cachedUrls.has(video.src)) return;
+        _cacheDownloadQueue.push(video.src);
+    });
+    if (!_cacheDownloadQueue.length) return;
+
+    _cacheDownloading = true;
+    _cacheDownloadDone = 0;
+    _cacheDownloadTotal = _cacheDownloadQueue.length;
+    document.getElementById('cacheDownloadAllBtn').disabled = true;
+    document.getElementById('cacheDownloadAllBtn').textContent = 'Downloading...';
+    updateCacheProgress();
+
+    // Mark all as downloading
+    _cacheDownloadQueue.forEach(function(url) {
+        var item = document.querySelector('[data-cache-url="' + CSS.escape(url) + '"]');
+        if (item) {
+            var d = item.querySelector('.cache-item-status');
+            if (d) d.className = 'cache-item-status downloading';
+        }
+    });
+
+    // Download 2 at a time
+    processNextCacheDownload();
+    processNextCacheDownload();
+}
+
+function processNextCacheDownload() {
+    if (!_cacheDownloadQueue.length) {
+        if (_cacheDownloadDone >= _cacheDownloadTotal && _cacheDownloading) {
+            _cacheDownloading = false;
+            document.getElementById('cacheDownloadAllBtn').textContent = 'Download All';
+            document.getElementById('cacheDownloadAllBtn').disabled = false;
+            var prog = document.getElementById('cacheProgress');
+            prog.textContent = 'Done! ' + _cacheDownloadTotal + ' video(s) cached.';
+            setTimeout(function() { prog.style.display = 'none'; }, 3000);
+            refreshCacheStatus();
+        }
+        return;
+    }
+    var url = _cacheDownloadQueue.shift();
+    swPost({ type: 'PRECACHE_VIDEO', url: url });
+}
+
+function updateCacheProgress() {
+    var prog = document.getElementById('cacheProgress');
+    prog.style.display = '';
+    prog.textContent = 'Downloading ' + _cacheDownloadDone + ' / ' + _cacheDownloadTotal + '...';
+}
+
+function cacheClearAll() {
+    if (!confirm('Delete all cached videos?')) return;
+    swPost({ type: 'CLEAR_ALL_CACHE' });
+    var prog = document.getElementById('cacheProgress');
+    prog.style.display = '';
+    prog.textContent = 'Cache cleared.';
+    setTimeout(function() { prog.style.display = 'none'; }, 2000);
+}
 
 </script>
 </body>
