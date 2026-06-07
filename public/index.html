@@ -473,6 +473,7 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 
 <!-- Navbar -->
 <div class="top-navbar">
+    <button class="nav-btn-pill" onclick="openCacheModal()" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);flex-shrink:0;" id="cacheBtn">Cache</button>
     <span id="topicLabel" style="color:#aaa;font-size:0.85rem;margin-right:2px;">topic:</span>
     <div class="nav-dropdown" id="topicDropdown">
         <button class="nav-btn-pill nav-dropdown-btn" onclick="toggleTopicDropdown()">Topics ▾</button>
@@ -491,7 +492,6 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
         ondrop="handleFolderDrop(event); this.classList.remove('dragover')">Drop Folder</button>
     <input type="file" id="folderInput" style="display:none" webkitdirectory="" directory="" multiple onchange="handleFolderSelect(this.files)" />
     <select id="videoDropdown" onchange="onVideoDropdownChange(this)" style="background:#222;color:#fff;border:1px solid #555;border-radius:6px;padding:4px 8px;font-size:0.8rem;max-width:300px;"></select>
-    <button class="nav-btn-pill" onclick="openCacheModal()" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);" id="cacheBtn">Cache</button>
     <div class="nav-spacer"></div>
 </div>
 
