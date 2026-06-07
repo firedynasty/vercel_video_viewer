@@ -2090,8 +2090,14 @@ async function cacheOneVideo(url) {
     var cache = await caches.open(CACHE_NAME);
     var existing = await cache.match(url);
     if (existing) return 'already';
-    var response = await fetch(url);
+    // Dropbox URLs block direct JS fetch() with CORS — proxy through our API
+    var fetchUrl = url;
+    if (url.indexOf('dropbox.com') !== -1 || url.indexOf('dropboxusercontent.com') !== -1) {
+        fetchUrl = '/api/proxy?url=' + encodeURIComponent(url);
+    }
+    var response = await fetch(fetchUrl);
     if (!response.ok) throw new Error('HTTP ' + response.status);
+    // Store under the original URL so resolveCachedBlobUrl() can find it
     await cache.put(url, response);
     _cachedUrls.add(url);
     return 'done';
