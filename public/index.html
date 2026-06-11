@@ -115,13 +115,7 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 .nav-dropdown-menu a:hover { background: rgba(255,255,255,0.1); }
 .nav-dropdown-menu a.current { color: #90CAF9; font-weight: bold; }
 
-/* ===== GALLERY LAYOUT ===== */
-.gallery-container {
-    width: 100vw;
-    height: calc(100vh - 53px);
-    display: flex;
-    flex-direction: column;
-}
+/* ===== LAYOUT ===== */
 
 /* ===== URL/CSV PANEL ===== */
 .load-panel {
@@ -153,46 +147,16 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 .load-textarea::placeholder { color: #555; }
 .load-status { font-size: 0.75rem; color: #888; margin-top: 4px; }
 
-/* ===== MAIN GALLERY ===== */
-.main-gallery {
-    position: relative; flex: 1; display: flex;
-    flex-direction: column; padding: 0 20px 10px 20px; min-height: 0;
-}
-.video-display {
-    position: relative; width: 100%; flex: 1;
-    margin-bottom: 10px; border-radius: 8px; overflow: hidden;
-    background: #000; display: flex; align-items: center;
-    justify-content: center; min-height: 0;
-    transition: opacity 0.2s ease;
-}
-.main-video { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
-#youtubePlayerWrap { width: 100%; height: 100%; }
-#youtubePlayerWrap iframe { width: 100%; height: 100%; border: none; }
-.nav-arrow {
-    position: absolute; top: 50%; transform: translateY(-50%);
-    background: rgba(0,0,0,0.6); border: none; color: white;
-    font-size: 2rem; padding: 15px 20px; cursor: pointer;
-    border-radius: 8px; transition: all 0.3s; z-index: 10;
-}
-.nav-arrow:hover { background: rgba(0,0,0,0.8); transform: translateY(-50%) scale(1.05); }
-.prev-btn { left: 20px; }
-.next-btn { right: 20px; }
-.video-title {
-    position: absolute; top: 20px; left: 20px;
-    background: rgba(0,0,0,0.7); padding: 10px 20px;
-    border-radius: 8px; font-size: 1rem; z-index: 10;
-    max-width: calc(100% - 40px);
-}
+/* ===== VIDEO CONTROLS (inside modal) ===== */
 .video-controls {
-    position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
-    display: flex; gap: 10px; z-index: 10;
+    display: flex; gap: 10px; justify-content: center; margin-top: 8px;
 }
 .ctrl-btn {
-    background: rgba(0,0,0,0.7); border: none; color: white;
-    padding: 10px 15px; border-radius: 6px; cursor: pointer;
-    font-size: 0.9rem; transition: all 0.3s;
+    background: rgba(255,255,255,0.1); border: none; color: white;
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    font-size: 0.85rem; transition: all 0.3s;
 }
-.ctrl-btn:hover { background: rgba(0,0,0,0.9); }
+.ctrl-btn:hover { background: rgba(255,255,255,0.2); }
 .ctrl-btn.active-loop { background: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.5); }
 .loading-overlay {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -230,16 +194,57 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 .empty-state h2 { font-size: 1.5rem; color: #888; margin-bottom: 10px; }
 .empty-state p { font-size: 0.95rem; }
 
-/* Thumbnail strip */
-.thumbnail-strip {
-    display: flex; gap: 6px; overflow-x: auto;
-    padding: 8px 20px; scroll-behavior: smooth;
-    background: rgba(255,255,255,0.05);
-    border-radius: 6px; margin: 0 -20px;
+/* Video list */
+.video-list-wrap {
+    max-width: 800px; margin: 0 auto; padding: 16px;
 }
-.thumbnail-strip::-webkit-scrollbar { height: 6px; }
-.thumbnail-strip::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 3px; }
-.thumbnail-strip::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+.video-list { list-style: none; }
+.video-item {
+    padding: 12px 16px; margin-bottom: 4px; background: #252525;
+    border-radius: 6px; cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; gap: 12px;
+}
+.video-item:hover { background: #333; transform: translateX(4px); }
+.video-item .play-icon { color: #B71C1C; font-size: 18px; flex-shrink: 0; }
+.video-item .label { font-size: 15px; color: #ddd; }
+.video-item:hover .label { color: white; }
+
+/* Player modal */
+.player-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.92); z-index: 9998;
+    justify-content: center; align-items: center;
+}
+.player-overlay.open { display: flex; }
+.player-modal {
+    position: relative; width: 90vw; max-width: 1100px;
+}
+.player-modal video {
+    width: 100%; max-height: 75vh; border-radius: 8px; background: #000;
+}
+.player-modal #youtubePlayerWrap { width: 100%; height: 75vh; }
+.player-modal #youtubePlayerWrap iframe { width: 100%; height: 100%; border: none; }
+.player-modal-close {
+    position: absolute; top: -40px; right: 0;
+    background: none; border: none; color: white;
+    font-size: 28px; cursor: pointer; padding: 4px 10px; z-index: 10;
+}
+.player-modal-close:hover { color: #ef9a9a; }
+.player-modal-label {
+    text-align: center; margin-top: 10px; font-size: 16px;
+    color: #ccc; font-weight: 300;
+}
+.player-modal-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(0,0,0,0.6); border: none; color: white;
+    font-size: 2rem; padding: 15px 18px; cursor: pointer;
+    border-radius: 8px; transition: background 0.2s; z-index: 10;
+}
+.player-modal-nav:hover { background: rgba(255,255,255,0.15); }
+.player-modal-prev { left: -60px; }
+.player-modal-next { right: -60px; }
+
+/* Saved time pills */
 .saved-time-btn {
     border: none; color: #fff; font-size: 12px; font-weight: 600;
     padding: 8px 14px; border-radius: 20px; cursor: pointer;
@@ -247,8 +252,14 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 }
 .saved-time-btn:hover { transform: scale(1.1); box-shadow: 0 4px 15px rgba(255,255,255,0.3); }
 .saved-time-btn.active { box-shadow: 0 0 12px rgba(255,255,255,0.7); transform: scale(1.05); }
+
+/* Txt file buttons in list view */
+.txt-buttons-strip {
+    display: flex; gap: 6px; overflow-x: auto; padding: 8px 0;
+    scroll-behavior: smooth; flex-wrap: wrap;
+}
 .thumb-btn {
-    min-width: 160px; height: 40px;
+    min-width: 140px; height: 36px;
     background: rgba(255,255,255,0.1); border: 2px solid transparent;
     color: #ccc; font-size: 0.75rem; border-radius: 4px; cursor: pointer;
     transition: all 0.3s; padding: 4px 8px;
@@ -282,10 +293,12 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 .thumb-btn.txt-file.active { border-color: #4CAF50; color: #fff; background: rgba(76,175,80,0.25); }
 
 @media (max-width: 768px) {
-    .main-gallery { padding: 0 10px 10px 10px; }
-    .nav-arrow { font-size: 1.5rem; padding: 12px 15px; }
-    .prev-btn { left: 10px; }
-    .next-btn { right: 10px; }
+    .player-modal { width: 95vw; }
+    .player-modal-prev { left: 5px; }
+    .player-modal-next { right: 5px; }
+    .player-modal-nav { padding: 10px 14px; font-size: 1.5rem; }
+    .player-modal-close { top: -36px; }
+    .video-list-wrap { padding: 10px; }
     .thumb-btn { min-width: 120px; height: 35px; font-size: 0.65rem; }
 }
 
@@ -491,7 +504,6 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
         ondragleave="this.classList.remove('dragover')"
         ondrop="handleFolderDrop(event); this.classList.remove('dragover')">Drop Folder</button>
     <input type="file" id="folderInput" style="display:none" webkitdirectory="" directory="" multiple onchange="handleFolderSelect(this.files)" />
-    <select id="videoDropdown" onchange="onVideoDropdownChange(this)" style="background:#222;color:#fff;border:1px solid #555;border-radius:6px;padding:4px 8px;font-size:0.8rem;max-width:300px;"></select>
     <div class="nav-spacer"></div>
 </div>
 
@@ -511,51 +523,55 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
     <div class="load-status" id="loadStatus">Paste URLs or load a CSV file</div>
 </div>
 
-<!-- Main gallery -->
-<div class="gallery-container">
-    <div class="main-gallery">
-        <div class="video-display" id="videoDisplay">
-            <div class="empty-state" id="emptyState">
-                <h2>No Videos Loaded</h2>
-                <p>Select a <strong>category</strong> above, use <strong>Dropbox</strong> to browse a folder, or <strong>URLs / CSV</strong> to paste links.</p>
-                <p style="margin-top:10px; font-size:0.8rem; color:#555;">
-                    CSV format: title,url &nbsp;or&nbsp; url (name auto-extracted from filename).
-                </p>
-            </div>
-            <video id="mainVideo" class="main-video" controls preload="none" style="display:none;">
-                Your browser does not support the video tag.
-            </video>
-            <div id="youtubePlayerWrap" style="display:none; width:100%; height:100%;"><div id="youtubePlayer"></div></div>
-            <div class="loading-overlay" id="loadingOverlay">
-                <div class="spinner"></div>
-                <div class="loading-text" id="loadingText">Loading video...</div>
-            </div>
-            <div class="buffer-bar-container hidden" id="bufferBar">
-                <div class="buffer-bar-fill" id="bufferBarFill"></div>
-            </div>
-            <button class="nav-arrow prev-btn" id="prevBtn" style="display:none;">&#8249;</button>
-            <button class="nav-arrow next-btn" id="nextBtn" style="display:none;">&#8250;</button>
-            <div class="video-title" id="videoTitle" style="display:none;"></div>
-            <div class="video-controls" id="videoControls" style="display:none;">
-                <button class="ctrl-btn" id="playPauseBtn">Play/Pause</button>
-                <button class="ctrl-btn" id="muteBtn">Mute</button>
-                <button class="ctrl-btn" id="loopBtn">Repeat</button>
-                <button class="ctrl-btn" id="fullscreenBtn">Fullscreen</button>
-                <button class="ctrl-btn" id="speedBtn">1x</button>
-            </div>
+<!-- Video list view -->
+<div class="video-list-wrap" id="videoListWrap">
+    <div class="empty-state" id="emptyState">
+        <h2>No Videos Loaded</h2>
+        <p>Select a <strong>category</strong> above, use <strong>Dropbox</strong> to browse a folder, or <strong>URLs / CSV</strong> to paste links.</p>
+        <p style="margin-top:10px; font-size:0.8rem; color:#555;">
+            CSV format: title,url &nbsp;or&nbsp; url (name auto-extracted from filename).
+        </p>
+    </div>
+    <ul class="video-list" id="videoList"></ul>
+    <div class="dropdown-row" id="dropdownRow">
+        <select id="txtDropdown" class="txt-select" onchange="onTxtDropdownChange(this)"></select>
+    </div>
+    <div id="dropdownFileName" style="text-align:center;font-size:1.5rem;color:#aaa;margin-bottom:6px;word-break:break-all;display:none;"></div>
+    <div class="txt-buttons-strip" id="thumbnailStrip" style="display:none;"></div>
+    <div class="instructions">
+        ← → seek 5s &bull; [ ] prev/next video &bull; Space play/pause &bull; M mute &bull; R repeat &bull; F fullscreen &bull; Esc close player
+    </div>
+</div>
+
+<!-- Player modal -->
+<div class="player-overlay" id="playerOverlay">
+    <div class="player-modal">
+        <button class="player-modal-close" id="playerClose">&times;</button>
+        <button class="player-modal-nav player-modal-prev" id="prevBtn">&#8249;</button>
+        <button class="player-modal-nav player-modal-next" id="nextBtn">&#8250;</button>
+        <video id="mainVideo" controls playsinline preload="none">
+            Your browser does not support the video tag.
+        </video>
+        <div id="youtubePlayerWrap" style="display:none;"><div id="youtubePlayer"></div></div>
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="spinner"></div>
+            <div class="loading-text" id="loadingText">Loading video...</div>
         </div>
-        <div id="savedTimesButtons" style="display:none;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;"></div>
-        <div style="text-align:center;margin-bottom:8px;">
+        <div class="buffer-bar-container hidden" id="bufferBar">
+            <div class="buffer-bar-fill" id="bufferBarFill"></div>
+        </div>
+        <div class="player-modal-label" id="videoTitle"></div>
+        <div class="video-controls" id="videoControls">
+            <button class="ctrl-btn" id="playPauseBtn">Play/Pause</button>
+            <button class="ctrl-btn" id="muteBtn">Mute</button>
+            <button class="ctrl-btn" id="loopBtn">Repeat</button>
+            <button class="ctrl-btn" id="fullscreenBtn">Fullscreen</button>
+            <button class="ctrl-btn" id="speedBtn">1x</button>
+        </div>
+        <div id="savedTimesButtons" style="display:none;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
+        <div style="text-align:center;margin-top:6px;">
             <input id="addTimeInput" type="text" placeholder="0:07" style="width:60px;padding:4px 8px;border:1px solid #555;border-radius:12px;background:#222;color:#fff;font-size:12px;text-align:center;">
             <button id="copyTimesBtn" title="Copy name + times to clipboard" style="display:none;background:#333;border:1px solid #555;color:#ccc;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;margin-left:6px;" onclick="copyTimesToClipboard()">Copy</button>
-        </div>
-        <div class="dropdown-row" id="dropdownRow">
-            <select id="txtDropdown" class="txt-select" onchange="onTxtDropdownChange(this)"></select>
-        </div>
-        <div id="dropdownFileName" style="text-align:center;font-size:1.5rem;color:#aaa;margin-bottom:6px;word-break:break-all;display:none;"></div>
-        <div class="thumbnail-strip" id="thumbnailStrip" style="display:none;"></div>
-        <div class="instructions">
-            ← → seek 5s &bull; [ ] prev/next video &bull; Space play/pause &bull; M mute &bull; R repeat &bull; F fullscreen &bull; Esc replay last pill
         </div>
     </div>
 </div>
@@ -1047,6 +1063,7 @@ function appendDbTxtFileButtons(txtEntries) {
     if (!txtEntries.length) return;
     var txtDD = document.getElementById('txtDropdown');
     txtDD.style.display = '';
+    thumbnailStrip.style.display = '';
     txtEntries.forEach(function(entry, i) {
         var btn = document.createElement('button');
         btn.className = 'thumb-btn txt-file';
@@ -1241,22 +1258,35 @@ function copyTimesToClipboard() {
 }
 
 function showPlayer(show) {
-    [prevBtn, nextBtn, videoTitle, videoControls].forEach(function(el) {
-        el.style.display = show ? '' : 'none';
-    });
     emptyState.style.display = show ? 'none' : '';
+    document.getElementById('videoList').style.display = show ? '' : 'none';
     if (!show) {
-        mainVideo.style.display = 'none';
-        youtubePlayerWrap.style.display = 'none';
-        savedTimesContainer.style.display = 'none';
-        document.getElementById('copyTimesBtn').style.display = 'none';
+        closePlayerModal();
     }
+}
+
+function openPlayerModal() {
+    document.getElementById('playerOverlay').classList.add('open');
+}
+
+function closePlayerModal() {
+    document.getElementById('playerOverlay').classList.remove('open');
+    mainVideo.pause();
+    mainVideo.removeAttribute('src');
+    mainVideo.load();
+    if (isYouTube && ytPlayer) { ytPlayer.destroy(); ytPlayer = null; }
+    youtubePlayerWrap.style.display = 'none';
+    mainVideo.style.display = 'none';
+    savedTimesContainer.style.display = 'none';
+    document.getElementById('copyTimesBtn').style.display = 'none';
 }
 
 async function loadVideo(index) {
     if (!videos.length) return;
     currentIndex = index;
     var video = videos[index];
+
+    openPlayerModal();
     loadingOverlay.classList.add('visible');
 
     mainVideo.pause();
@@ -1266,16 +1296,11 @@ async function loadVideo(index) {
     var src = video.src;
     var ytId = getYouTubeId(src);
 
-    console.log('[DEBUG loadVideo]', { src: src, ytId: ytId, ytReady: ytReady, index: index, title: video.title });
-
     if (ytId && ytReady) {
-        // YouTube embed via API
-        console.log('[DEBUG YT] Embedding YouTube video', { ytId: ytId });
         isYouTube = true;
         mainVideo.style.display = 'none';
         youtubePlayerWrap.style.display = '';
         if (ytPlayer) { ytPlayer.destroy(); ytPlayer = null; }
-        // Recreate the target div (destroy removes it)
         var container = document.getElementById('youtubePlayerWrap');
         var oldDiv = document.getElementById('youtubePlayer');
         if (!oldDiv) { oldDiv = document.createElement('div'); oldDiv.id = 'youtubePlayer'; container.appendChild(oldDiv); }
@@ -1285,10 +1310,8 @@ async function loadVideo(index) {
             events: {
                 onReady: function() {
                     loadingOverlay.classList.remove('visible');
-                    // Apply persisted speed setting
                     var speedBtn = document.getElementById('speedBtn');
                     ytPlayer.setPlaybackRate(speedBtn.textContent === '0.5x' ? 0.5 : 1);
-                    // Apply persisted mute setting
                     if (muteBtn.textContent === 'Unmute') ytPlayer.mute(); else ytPlayer.unMute();
                 }
             }
@@ -1296,19 +1319,15 @@ async function loadVideo(index) {
         loadingOverlay.classList.remove('visible');
         bufferBar.classList.add('hidden');
     } else {
-        // Direct video
-        if (ytId && !ytReady) console.warn('[DEBUG YT] YouTube ID found but API not ready!', { ytId: ytId, ytReady: ytReady });
-        console.log('[DEBUG] Playing as direct video', { src: src });
         isYouTube = false;
         youtubePlayerWrap.style.display = 'none';
         if (ytPlayer) { ytPlayer.destroy(); ytPlayer = null; }
         mainVideo.style.display = '';
 
-        // Resolve Dropbox path to a temporary link
         if (src.startsWith('__dropbox__') && dbAccessToken) {
             try {
                 src = await dbGetTempLink(src.slice('__dropbox__'.length));
-                videos[index].src = src; // cache resolved URL
+                videos[index].src = src;
             } catch (e) {
                 videoTitle.textContent = video.title + ' (link error)';
                 loadingOverlay.classList.remove('visible');
@@ -1316,25 +1335,22 @@ async function loadVideo(index) {
             }
         }
 
-        // Use cached blob URL if available (avoids network for pre-cached videos)
         var blobUrl = await resolveCachedBlobUrl(src);
         mainVideo.src = blobUrl || src;
         mainVideo.loop = looping;
         mainVideo.load();
     }
 
-    videoTitle.textContent = video.title;
-    setDropdownFileName(video.title, index, videos.length);
+    videoTitle.textContent = (index + 1) + ' / ' + videos.length + ' — ' + video.title;
 
     renderSavedTimes(video.times);
     document.getElementById('copyTimesBtn').style.display = '';
 
-    document.querySelectorAll('.thumb-btn:not(.txt-file)').forEach(function(btn, i) {
-        btn.classList.toggle('active', i === index);
+    // Highlight active item in list
+    document.querySelectorAll('.video-item').forEach(function(item, i) {
+        item.style.background = i === index ? '#333' : '';
     });
-    document.getElementById('videoDropdown').value = index;
-    var activeBtn = thumbnailStrip.children[index];
-    if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    updateURLParams();
 }
 
 var bufferBar = document.getElementById('bufferBar');
@@ -1370,9 +1386,12 @@ mainVideo.addEventListener('progress', updateBufferBar);
 
 mainVideo.addEventListener('canplay', function() {
     loadingOverlay.classList.remove('visible');
-    // Reapply speed after browser resets playbackRate on new source
     mainVideo.playbackRate = document.getElementById('speedBtn').textContent === '0.5x' ? 0.5 : 1;
     updateBufferBar();
+    // Auto-play when modal is open
+    if (document.getElementById('playerOverlay').classList.contains('open') && mainVideo.paused) {
+        mainVideo.play().catch(function() {});
+    }
 });
 
 mainVideo.addEventListener('waiting', function() {
@@ -1419,24 +1438,20 @@ function findIndexBySelectKey(key) {
 }
 
 function buildThumbnails() {
+    var videoListEl = document.getElementById('videoList');
+    videoListEl.innerHTML = '';
     thumbnailStrip.innerHTML = '';
-    var videoDD = document.getElementById('videoDropdown');
     var txtDD = document.getElementById('txtDropdown');
-    videoDD.innerHTML = '';
     txtDD.innerHTML = '<option value="">-- text files --</option>';
     txtDD.style.display = 'none';
     _selectKeys = buildSelectKeys(videos);
     videos.forEach(function(video, index) {
-        var btn = document.createElement('button');
-        btn.className = 'thumb-btn';
-        btn.textContent = video.title;
-        btn.addEventListener('click', function() { loadVideo(index); });
-        thumbnailStrip.appendChild(btn);
-        // Also add to dropdown
-        var opt = document.createElement('option');
-        opt.value = index;
-        opt.textContent = video.title;
-        videoDD.appendChild(opt);
+        var li = document.createElement('li');
+        li.className = 'video-item';
+        li.innerHTML = '<span class="play-icon">&#9654;</span><span class="label"></span>';
+        li.querySelector('.label').textContent = video.title;
+        li.addEventListener('click', function() { loadVideo(index); });
+        videoListEl.appendChild(li);
     });
     document.getElementById('dropdownRow').style.display = videos.length ? 'flex' : 'none';
 }
@@ -1504,8 +1519,8 @@ function toggleSpeed() {
     }
 }
 
-prevBtn.addEventListener('click', prevVideo);
-nextBtn.addEventListener('click', nextVideo);
+prevBtn.addEventListener('click', function(e) { e.stopPropagation(); prevVideo(); });
+nextBtn.addEventListener('click', function(e) { e.stopPropagation(); nextVideo(); });
 playPauseBtn.addEventListener('click', togglePlayPause);
 muteBtn.addEventListener('click', toggleMute);
 loopBtn.addEventListener('click', toggleLoop);
@@ -1513,34 +1528,43 @@ fullscreenBtn.addEventListener('click', toggleFullscreen);
 document.getElementById('speedBtn').addEventListener('click', toggleSpeed);
 mainVideo.addEventListener('click', togglePlayPause);
 
+// Player modal close handlers
+document.getElementById('playerClose').addEventListener('click', closePlayerModal);
+document.getElementById('playerOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closePlayerModal();
+});
+
 document.addEventListener('keydown', function(e) {
     if (['INPUT','SELECT','TEXTAREA'].indexOf(e.target.tagName) !== -1) return;
+    var modalOpen = document.getElementById('playerOverlay').classList.contains('open');
+
+    if (e.key === 'Escape') {
+        if (document.fullscreenElement) { document.exitFullscreen(); }
+        else if (modalOpen) { closePlayerModal(); }
+        return;
+    }
+
+    // Other shortcuts only work when modal is open
+    if (!modalOpen) return;
     switch (e.key) {
         case 'ArrowLeft': e.preventDefault(); if (isYouTube && ytPlayer) { ytPlayer.seekTo(Math.max(0, ytPlayer.getCurrentTime() - 5), true); } else { mainVideo.currentTime = Math.max(0, mainVideo.currentTime - 5); } break;
         case 'ArrowRight': e.preventDefault(); if (isYouTube && ytPlayer) { ytPlayer.seekTo(ytPlayer.getCurrentTime() + 5, true); } else { mainVideo.currentTime = Math.min(mainVideo.duration || 0, mainVideo.currentTime + 5); } break;
         case '[': prevVideo(); break;
         case ']': nextVideo(); break;
         case ' ': e.preventDefault(); e.stopPropagation(); if (document.activeElement) document.activeElement.blur(); togglePlayPause(); break;
-        case 'Escape':
-            if (document.fullscreenElement) { document.exitFullscreen(); }
-            else if (lastPillTime !== null) {
-                if (isYouTube && ytPlayer) { ytPlayer.seekTo(lastPillTime, true); }
-                else { mainVideo.currentTime = lastPillTime; }
-            }
-            break;
         case 'm': case 'M': toggleMute(); break;
         case 'f': case 'F': toggleFullscreen(); break;
         case 'r': case 'R': toggleLoop(); break;
     }
 });
 
-function applyVideoList(videoList, source) {
+function applyVideoList(videoList, source, autoPlay) {
     videos = videoList;
     currentIndex = 0;
     buildThumbnails();
     if (videos.length) {
         showPlayer(true);
-        loadVideo(0);
+        if (autoPlay) loadVideo(0);
     } else {
         showPlayer(false);
         setStatus('No videos found in ' + source);
@@ -1708,15 +1732,8 @@ function selectCategory(cat) {
             videoList.push(v);
         }
     });
-    // Fade transition
-    var display = document.getElementById('videoDisplay');
-    display.style.opacity = '0';
-    setTimeout(function() {
-        applyVideoList(videoList, 'Category: ' + cat);
-        // Populate text dropdown with text-only entries
-        applyTextEntries(textEntries);
-        display.style.opacity = '1';
-    }, 200);
+    applyVideoList(videoList, 'Category: ' + cat);
+    applyTextEntries(textEntries);
 }
 
 function applyTextEntries(textEntries) {
@@ -1724,9 +1741,11 @@ function applyTextEntries(textEntries) {
     txtDD.innerHTML = '<option value="">-- text files --</option>';
     if (!textEntries.length) {
         txtDD.style.display = 'none';
+        thumbnailStrip.style.display = 'none';
         return;
     }
     txtDD.style.display = '';
+    thumbnailStrip.style.display = '';
     // Store text entries for access by dropdown handler
     txtDD._textEntries = textEntries;
     textEntries.forEach(function(entry, i) {
@@ -1778,12 +1797,9 @@ async function initPlaylists() {
         var matchedList = urlList && catKeys.find(function(c) { return c.toLowerCase() === urlList.toLowerCase(); });
         if (matchedList) {
             selectCategory(matchedList);
-            // selectCategory uses a 200ms fade timeout, so defer select param
             if (urlSelect) {
-                setTimeout(function() {
-                    var idx = findIndexBySelectKey(urlSelect);
-                    if (idx >= 0) loadVideo(idx);
-                }, 250);
+                var idx = findIndexBySelectKey(urlSelect);
+                if (idx >= 0) loadVideo(idx);
             }
         }
     } else if (topicNames.length) {
@@ -1812,14 +1828,6 @@ async function initPlaylists() {
 // =====================================================================
 // VIDEO / TXT DROPDOWN HANDLERS
 // =====================================================================
-
-function onVideoDropdownChange(sel) {
-    var idx = parseInt(sel.value);
-    if (!isNaN(idx)) {
-        loadVideo(idx);
-        updateURLParams();
-    }
-}
 
 function onTxtDropdownChange(sel) {
     var val = sel.value;
@@ -1928,6 +1936,7 @@ function appendTxtFileButtons(txtFiles) {
     if (!txtFiles.length) return;
     var txtDD = document.getElementById('txtDropdown');
     txtDD.style.display = '';
+    thumbnailStrip.style.display = '';
     txtFiles.forEach(function(f, i) {
         var btn = document.createElement('button');
         btn.className = 'thumb-btn txt-file';
