@@ -2,6 +2,17 @@
 """Generate playlist JSON files from .txt files in playlist folders.
 
 Scans for directories matching playlists*/ and generates corresponding JSON:
+
+ so python dropboxautomation/scan_dropbox.py dropbox:/videos/basketball 
+
+
+  generate_playlists.py is for converting the local .txt files into             
+  playlists.json
+
+  python generate_playlists.py -i playlists
+
+  or default python generate_playlists.py
+
   playlists/        -> public/playlists.json
   playlists_chinese/ -> public/playlists_chinese.json
   playlists_recipes/ -> public/playlists_recipes.json
@@ -62,6 +73,11 @@ def parse_playlist_file(filepath):
                 else:
                     rest = parts[0].strip()
                     name = ''
+                # If "name" looks like a URL and rest looks like timestamps,
+                # treat the whole line as url,times (no name)
+                if name and re.match(r'^https?://', name) and rest and re.match(r'^\d{1,2}:\d{2}', rest):
+                    rest = name + ',' + rest
+                    name = ''
                 # Check if rest is timestamps (no URL) — e.g. "0:07,0:18,1:13(label)"
                 # A URL starts with http(s):// or / or contains a dot before any colon
                 is_url = bool(re.match(r'^https?://', rest) or re.match(r'^/', rest))
@@ -92,8 +108,33 @@ def parse_playlist_file(filepath):
                         # Always also add as a text entry for the text dropdown
                         entries.append({'name': name, 'times': times, 'type': 'text'})
                     continue
+                # URL possibly followed by inline timestamps: url,0:19,1:05(label)
+                # Split off trailing timestamp segments after the URL
                 url = rest
                 times = []
+                if is_url:
+                    # Split by comma and check if trailing parts are timestamps
+                    url_and_times = rest.split(',')
+                    # Walk from end: collect timestamps, stop at first non-timestamp
+                    trailing_times = []
+                    i = len(url_and_times) - 1
+                    while i > 0:
+                        candidate = url_and_times[i].strip()
+                        if re.match(r'^\d{1,2}:\d{2}', candidate):
+                            trailing_times.insert(0, candidate)
+                            i -= 1
+                        else:
+                            break
+                    if trailing_times:
+                        url = ','.join(url_and_times[:i + 1])
+                        for t in trailing_times:
+                            tm = re.match(r'^([\d:]+)\s*(?:\(([^)]*)\))?(.*)$', t)
+                            if tm:
+                                tentry = {'time': tm.group(1)}
+                                label = (tm.group(2) or '').strip()
+                                if label:
+                                    tentry['label'] = label
+                                times.append(tentry)
             if not url:
                 continue
             if not name:
@@ -208,6 +249,7 @@ def main():
     print(f'\n-> Wrote {len(all_playlists)} topic(s) to {playlists_path}')
 
     print(f'Done. Processed {len(all_playlists)} topic(s).')
+    print('\nReminder: need to Dropbox scan after sending to Dropbox or grab individual link to put to ./playlists')
 
     # Print commands to sync to Dropbox and update Vercel env var
     base = Path(__file__).resolve().parent / 'public'
