@@ -292,6 +292,36 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
 .thumb-btn.txt-file:hover { border-color: rgba(76,175,80,0.8); color: #A5D6A7; background: rgba(76,175,80,0.15); }
 .thumb-btn.txt-file.active { border-color: #4CAF50; color: #fff; background: rgba(76,175,80,0.25); }
 
+/* ===== AUDIO MODE IN PLAYER ===== */
+.audio-art {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 200px; border-radius: 8px;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    font-size: 80px; color: #ef9a9a;
+}
+
+/* ===== EARTH VIDEO BACKGROUND ===== */
+.earth-video-section {
+    position: fixed; bottom: 12px; right: 12px; z-index: 9990;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+}
+.earth-video-section video {
+    width: 120px; height: 120px; border-radius: 50%;
+    object-fit: cover; cursor: pointer;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+    opacity: 0.85; transition: opacity 0.3s;
+}
+.earth-video-section video:hover { opacity: 1; }
+.earth-repeat-btn {
+    font-size: 11px; padding: 4px 10px;
+    border: 2px solid #555; border-radius: 4px;
+    cursor: pointer; background: #222; color: #888;
+    transition: all 0.2s;
+}
+.earth-repeat-btn.active {
+    border-color: #0FC0F5; background: #0FC0F5; color: #fff;
+}
+
 @media (max-width: 768px) {
     .player-modal { width: 95vw; }
     .player-modal-prev { left: 5px; }
@@ -300,6 +330,7 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
     .player-modal-close { top: -36px; }
     .video-list-wrap { padding: 10px; }
     .thumb-btn { min-width: 120px; height: 35px; font-size: 0.65rem; }
+    .earth-video-section video { width: 80px; height: 80px; }
 }
 
 /* ===== DROPBOX MODAL ===== */
@@ -549,6 +580,7 @@ input:checked + .slider-toggle:before { transform: translateX(20px); }
         <button class="player-modal-close" id="playerClose">&times;</button>
         <button class="player-modal-nav player-modal-prev" id="prevBtn">&#8249;</button>
         <button class="player-modal-nav player-modal-next" id="nextBtn">&#8250;</button>
+        <div class="audio-art" id="audioArt" style="display:none;">&#9835;</div>
         <video id="mainVideo" controls playsinline preload="none">
             Your browser does not support the video tag.
         </video>
@@ -944,9 +976,9 @@ function dbRenderList(entries) {
     entries.forEach(function(entry) {
         var div = document.createElement('div');
         var isTxt = !entry.isFolder && /\.(txt|md)$/i.test(entry.name);
-        var isVid = !entry.isFolder && isVideoFile(entry.name);
+        var isVid = !entry.isFolder && isMediaFile(entry.name);
         div.className = 'db-item' + (!entry.isFolder && !isTxt ? ' file' : '');
-        var icon = entry.isFolder ? '📁' : (isTxt ? '📄' : '🎬');
+        var icon = entry.isFolder ? '📁' : (isTxt ? '📄' : (isAudioFile(entry.name) ? '🎵' : '🎬'));
         div.innerHTML =
             '<span class="db-item-icon">' + icon + '</span>' +
             '<span class="db-item-name">' + entry.name + '</span>' +
@@ -977,7 +1009,7 @@ function dbRenderBreadcrumb(path) {
 
 function dbUpdateFooter(entries) {
     var footer = document.getElementById('dbFooter');
-    var videoCount = entries.filter(function(e) { return !e.isFolder && isVideoFile(e.name); }).length;
+    var videoCount = entries.filter(function(e) { return !e.isFolder && isMediaFile(e.name); }).length;
     var txtCount = entries.filter(function(e) {
         if (e.isFolder) return false;
         var n = e.name.toLowerCase();
@@ -1041,14 +1073,16 @@ async function dbLoadFolder() {
     try {
         // Non-recursive: load only the current folder
         var allEntries = await dbListFolder(dbCurrentPath);
-        var videoEntries = allEntries.filter(function(e) { return !e.isFolder && isVideoFile(e.name); });
+        var videoEntries = allEntries.filter(function(e) { return !e.isFolder && isMediaFile(e.name); });
         var txtEntries = allEntries.filter(function(e) {
             if (e.isFolder) return false;
             var n = e.name.toLowerCase();
             return n.endsWith('.txt') || n.endsWith('.md');
         });
         var videoList = videoEntries.map(function(e) {
-            return { title: nameFromUrl(e.path), src: dbDropboxPathToRawUrl(e.path), dropboxPath: e.path };
+            var item = { title: nameFromUrl(e.path), src: dbDropboxPathToRawUrl(e.path), dropboxPath: e.path };
+            if (isAudioFile(e.name)) item.isAudio = true;
+            return item;
         });
         applyVideoList(videoList, 'Dropbox: ' + (dbCurrentPath || '/'));
         // Load text files into thumbnail strip
@@ -1322,7 +1356,16 @@ async function loadVideo(index) {
         isYouTube = false;
         youtubePlayerWrap.style.display = 'none';
         if (ytPlayer) { ytPlayer.destroy(); ytPlayer = null; }
-        mainVideo.style.display = '';
+        var audioArt = document.getElementById('audioArt');
+        if (video.isAudio) {
+            audioArt.style.display = '';
+            mainVideo.style.display = '';
+            mainVideo.style.maxHeight = '50px';
+        } else {
+            audioArt.style.display = 'none';
+            mainVideo.style.display = '';
+            mainVideo.style.maxHeight = '75vh';
+        }
 
         if (src.startsWith('__dropbox__') && dbAccessToken) {
             try {
@@ -1377,7 +1420,8 @@ function updateBufferBar() {
 }
 
 mainVideo.addEventListener('loadstart', function() {
-    loadingText.textContent = 'Loading video...';
+    var isAudio = videos[currentIndex] && videos[currentIndex].isAudio;
+    loadingText.textContent = isAudio ? 'Loading audio...' : 'Loading video...';
     bufferBarFill.style.width = '0%';
     bufferBar.classList.remove('hidden');
 });
@@ -1448,7 +1492,8 @@ function buildThumbnails() {
     videos.forEach(function(video, index) {
         var li = document.createElement('li');
         li.className = 'video-item';
-        li.innerHTML = '<span class="play-icon">&#9654;</span><span class="label"></span>';
+        var icon = video.isAudio ? '&#9835;' : '&#9654;';
+        li.innerHTML = '<span class="play-icon">' + icon + '</span><span class="label"></span>';
         li.querySelector('.label').textContent = video.title;
         li.addEventListener('click', function() { loadVideo(index); });
         videoListEl.appendChild(li);
@@ -1578,10 +1623,24 @@ function setStatus(msg) { document.getElementById('loadStatus').textContent = ms
 // =====================================================================
 
 var VIDEO_EXTS = ['.mp4','.webm','.ogg','.mov','.avi','.mkv','.m4v'];
+var AUDIO_EXTS = ['.mp3','.m4a','.wav','.aac','.flac','.opus','.wma'];
+
+function stripQueryHash(name) {
+    return name.split('?')[0].split('#')[0];
+}
 
 function isVideoFile(name) {
-    var lower = name.toLowerCase();
+    var lower = stripQueryHash(name).toLowerCase();
     return VIDEO_EXTS.some(function(ext) { return lower.endsWith(ext); });
+}
+
+function isAudioFile(name) {
+    var lower = stripQueryHash(name).toLowerCase();
+    return AUDIO_EXTS.some(function(ext) { return lower.endsWith(ext); });
+}
+
+function isMediaFile(name) {
+    return isVideoFile(name) || isAudioFile(name);
 }
 
 // =====================================================================
@@ -1638,7 +1697,11 @@ function parseRowsAsVideoList(rows) {
         var url = firstIsUrl ? first : second;
         var rawName = firstIsUrl ? second : first;
         var name = rawName || (url ? nameFromUrl(url) : 'Clip ' + (result.length + 1));
-        if (url) result.push({ title: name, src: url });
+        if (url) {
+            var item = { title: name, src: url };
+            if (isAudioFile(url)) item.isAudio = true;
+            result.push(item);
+        }
     }
     return result;
 }
@@ -1729,6 +1792,7 @@ function selectCategory(cat) {
         } else {
             var v = { title: entry.name, src: entry.url };
             if (entry.times) v.times = entry.times;
+            if (isAudioFile(entry.url) || isAudioFile(entry.name)) v.isAudio = true;
             videoList.push(v);
         }
     });
@@ -1906,7 +1970,7 @@ function processDroppedFiles(fileList) {
     for (var i = 0; i < fileList.length; i++) {
         var f = fileList[i];
         var name = f.name.toLowerCase();
-        if (isVideoFile(name)) {
+        if (isMediaFile(name)) {
             videoFiles.push(f);
         } else if (name.endsWith('.txt') || name.endsWith('.md')) {
             txtFiles.push(f);
@@ -1919,7 +1983,9 @@ function processDroppedFiles(fileList) {
 
     // Build video list from local files using object URLs
     var videoList = videoFiles.map(function(f) {
-        return { title: nameFromUrl(f.name), src: URL.createObjectURL(f) };
+        var item = { title: nameFromUrl(f.name), src: URL.createObjectURL(f) };
+        if (isAudioFile(f.name)) item.isAudio = true;
+        return item;
     });
 
     if (videoList.length) {
@@ -2332,6 +2398,35 @@ async function cacheClearAll() {
     setTimeout(function() { prog.style.display = 'none'; }, 2000);
 }
 
+
 </script>
+
+<!-- Earth Video Background -->
+<div class="earth-video-section">
+    <button class="earth-repeat-btn" id="earthRepeatBtn" onclick="toggleEarthRepeat()">Repeat: Off</button>
+    <video id="earthVideo" src="https://www.dropbox.com/scl/fi/evjucrcs1wg1lcp6ixkyf/Earth-Rotation-Loop-FREE-TO-USE-aiQdLP2mBJE.mp4?rlkey=l4yjtujzis4xaz7ps24uh4x3n&st=slwbn62i&raw=1" playsinline preload="none"></video>
+</div>
+
+<script>
+var earthVideo = document.getElementById('earthVideo');
+var earthRepeatBtn = document.getElementById('earthRepeatBtn');
+var earthRepeatOn = false;
+
+earthVideo.addEventListener('ended', function() {
+    if (earthRepeatOn) earthVideo.play();
+});
+
+earthVideo.addEventListener('click', function() {
+    if (earthVideo.paused) earthVideo.play(); else earthVideo.pause();
+});
+
+function toggleEarthRepeat() {
+    earthRepeatOn = !earthRepeatOn;
+    earthRepeatBtn.textContent = 'Repeat: ' + (earthRepeatOn ? 'On' : 'Off');
+    earthRepeatBtn.classList.toggle('active', earthRepeatOn);
+    if (earthRepeatOn && earthVideo.paused) earthVideo.play();
+}
+</script>
+
 </body>
 </html>

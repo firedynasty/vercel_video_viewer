@@ -15,12 +15,15 @@ Usage:
 """
 
 import argparse
+import json
 import os
 import subprocess
 import sys
 from pathlib import Path
 
 VIDEO_EXTS = {'.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv', '.m4v'}
+AUDIO_EXTS = {'.mp3', '.m4a', '.wav', '.aac', '.flac', '.opus', '.wma'}
+MEDIA_EXTS = VIDEO_EXTS | AUDIO_EXTS
 
 
 def rclone(*args):
@@ -37,10 +40,14 @@ def rclone_cat(remote_path):
 
 
 def list_files(remote_path):
-    output = rclone('lsf', '-R', '--files-only', remote_path)
+    """List files with modification times, sorted newest first."""
+    output = rclone('lsjson', '-R', '--files-only', remote_path)
     if output is None:
         return []
-    return [f for f in output.splitlines() if f.strip()]
+    items = json.loads(output)
+    # Sort by modification time, newest first
+    items.sort(key=lambda x: x.get('ModTime', ''), reverse=True)
+    return [item['Path'] for item in items]
 
 
 def derive_name(filename):
@@ -86,7 +93,7 @@ def main():
     print(f'Scanning {remote} ...')
     all_files = list_files(remote)
 
-    video_files = [f for f in all_files if Path(f).suffix.lower() in VIDEO_EXTS]
+    video_files = [f for f in all_files if Path(f).suffix.lower() in MEDIA_EXTS]
     txt_files = [f for f in all_files if f.lower().endswith('.txt')]
 
     # Build lookup: video_path -> txt file path (for companion .txt files)
@@ -101,7 +108,7 @@ def main():
             companion_txts.add(t)
         else:
             stem = t[:-4]  # strip .txt
-            for ext in VIDEO_EXTS:
+            for ext in MEDIA_EXTS:
                 candidate = stem + ext
                 if candidate in video_files:
                     txt_lookup[candidate] = t
@@ -122,14 +129,14 @@ def main():
     for f in video_files:
         parts = f.split('/')
         if len(parts) == 1:
-            grouped.setdefault('scanned', []).append((f, 'video'))
+            grouped.setdefault('firstlevel', []).append((f, 'video'))
         else:
             subfolder = parts[0]
             grouped.setdefault(subfolder, []).append((f, 'video'))
     for f in standalone_txts:
         parts = f.split('/')
         if len(parts) == 1:
-            grouped.setdefault('scanned', []).append((f, 'txt'))
+            grouped.setdefault('firstlevel', []).append((f, 'txt'))
         else:
             subfolder = parts[0]
             grouped.setdefault(subfolder, []).append((f, 'txt'))
