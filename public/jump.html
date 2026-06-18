@@ -143,6 +143,25 @@ video {
     transition: background 0.2s;
 }
 #load-url-btn:hover { background: #d32f2f; }
+
+.drop-zone {
+    width: 100%;
+    max-width: 800px;
+    border: 2px dashed #555;
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 8px;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
+}
+.drop-zone.dragover {
+    border-color: #B71C1C;
+    background: rgba(183, 28, 28, 0.1);
+    color: #ef9a9a;
+}
     </style>
 </head>
 <body>
@@ -153,6 +172,8 @@ video {
     <input type="text" id="url-input" placeholder="Paste video URL...">
     <button id="load-url-btn">Load URL</button>
 </div>
+
+<div class="drop-zone" id="drop-zone">Drop video file here</div>
 
 <div class="controls">
     <label class="file-label" for="file-input">Choose File</label>
@@ -178,6 +199,27 @@ const jumpBtn = document.getElementById('jump-btn');
 const currentTimeEl = document.getElementById('current-time');
 const urlInput = document.getElementById('url-input');
 const loadUrlBtn = document.getElementById('load-url-btn');
+const dropZone = document.getElementById('drop-zone');
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+});
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+});
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('video/')) {
+        video.src = URL.createObjectURL(file);
+        video.load();
+        loadVideo();
+        dropZone.textContent = file.name;
+    }
+});
+dropZone.addEventListener('click', () => fileInput.click());
 
 function parseTime(str) {
     str = str.trim();
