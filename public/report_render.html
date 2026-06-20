@@ -329,18 +329,18 @@ function extractYouTubeId(url) {
 }
 
 function extractYouTubeTimestamps(url) {
-    // Match timestamps after ? that look like m:ss patterns separated by commas
-    // e.g. ?3:59,4:09,9:45
+    // Match inline timestamps after the URL, separated by commas
+    // e.g. "https://www.youtube.com/watch?v=abc,2:06,2:30,2:55"
+    // or   "https://www.youtube.com/watch?v=abc, 4:35, 8:57, 14:58"
     var times = [];
-    var m = url.match(/\?([\d:,]+)$/);
-    if (m) {
-        var parts = m[1].split(',');
-        parts.forEach(function(p) {
-            p = p.trim();
-            if (/^\d+:\d{2}$/.test(p) || /^\d+$/.test(p)) {
-                times.push({ time: p, label: '' });
-            }
-        });
+    // Split by comma and check each part after the first (which is the URL)
+    var parts = url.split(',');
+    // Skip the first part (the URL itself), check remaining for timestamps
+    for (var k = 1; k < parts.length; k++) {
+        var p = parts[k].trim().replace(/[\[\]]/g, '');
+        if (/^\d+:\d{2}$/.test(p) || /^\d+$/.test(p)) {
+            times.push({ time: p, label: '' });
+        }
     }
     return times;
 }
