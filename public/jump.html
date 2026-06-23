@@ -108,6 +108,37 @@ video {
     text-align: center;
 }
 
+.notes-container {
+    width: 100%;
+    max-width: 800px;
+    margin-top: 16px;
+}
+
+.notes-container label {
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 6px;
+    display: block;
+}
+
+#notes {
+    width: 100%;
+    background: #2a2a2a;
+    border: 2px solid #444;
+    border-radius: 6px;
+    color: white;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    resize: vertical;
+    overflow-y: auto;
+}
+#notes:focus {
+    outline: none;
+    border-color: #B71C1C;
+}
+#notes::placeholder { color: #666; }
+
 .url-controls {
     display: flex;
     gap: 8px;
@@ -189,6 +220,11 @@ video {
     <video id="video" controls></video>
     <div class="current-time" id="current-time"></div>
     <div class="hint">Enter time as seconds (90), m:ss (1:30), or h:mm:ss (1:02:30). Press Enter to jump.</div>
+</div>
+
+<div class="notes-container">
+    <label for="notes">Notes</label>
+    <textarea id="notes" rows="10" placeholder="Take notes from the video here..."></textarea>
 </div>
 
 <script>
