@@ -214,6 +214,8 @@ video {
     <button id="minus5-btn" disabled>-5s</button>
     <button id="plus5-btn" disabled>+5s</button>
     <button id="pause-btn" disabled>Pause</button>
+    <button id="append-start-btn" disabled>Append Start</button>
+    <button id="append-end-btn" disabled>Append End</button>
 </div>
 
 <div class="video-container">
@@ -294,6 +296,8 @@ function loadVideo() {
     document.getElementById('minus5-btn').disabled = false;
     document.getElementById('plus5-btn').disabled = false;
     document.getElementById('pause-btn').disabled = false;
+    document.getElementById('append-start-btn').disabled = false;
+    document.getElementById('append-end-btn').disabled = false;
 }
 
 fileInput.addEventListener('change', () => {
@@ -341,6 +345,25 @@ document.getElementById('pause-btn').addEventListener('click', () => {
     } else {
         video.pause();
     }
+});
+
+let clipStart = null;
+const appendStartBtn = document.getElementById('append-start-btn');
+const appendEndBtn = document.getElementById('append-end-btn');
+const notes = document.getElementById('notes');
+
+appendStartBtn.addEventListener('click', () => {
+    clipStart = formatTime(video.currentTime);
+    appendStartBtn.textContent = 'Append Start (' + clipStart + ')';
+});
+
+appendEndBtn.addEventListener('click', () => {
+    if (clipStart === null) return;
+    const clipEnd = formatTime(video.currentTime);
+    const line = clipStart + ',' + clipEnd;
+    notes.value = notes.value ? notes.value + '\n' + line : line;
+    clipStart = null;
+    appendStartBtn.textContent = 'Append Start';
 });
 
 timeInput.addEventListener('keydown', (e) => {
