@@ -221,7 +221,13 @@ video {
 <div class="video-container">
     <video id="video" controls></video>
     <div class="current-time" id="current-time"></div>
-    <div class="hint">Enter time as seconds (90), m:ss (1:30), or h:mm:ss (1:02:30). Press Enter to jump.</div>
+    <div class="hint">
+        Enter time as seconds (90), m:ss (1:30), or h:mm:ss (1:02:30). Press Enter to jump.<br><br>
+        <strong>Building a timestamps file:</strong> Use Append Start/End to mark clip boundaries. Notes will contain lines like <code>1:30,2:45</code>.<br>
+        Copy the notes into a <code>.txt</code> file, one timestamp pair per line.<br><br>
+        <strong>trim_video_long</strong> — extracts clips AT each timestamp range (keeps only those segments).<br>
+        <strong>trim_video_long_inverted</strong> — removes each timestamp range and keeps everything else.
+    </div>
 </div>
 
 <div class="notes-container">
