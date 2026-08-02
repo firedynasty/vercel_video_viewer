@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Timer</title>
+    <style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1a1a1a;
+    min-height: 100vh;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+h1 {
+    font-size: 20px;
+    margin-bottom: 16px;
+    color: #ef9a9a;
+}
+
+.controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    max-width: 800px;
+}
+
+.file-label {
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    background: #B71C1C;
+    transition: background 0.2s;
+}
+.file-label:hover { background: #d32f2f; }
+
+#file-input { display: none; }
+
+#time-input {
+    background: #2a2a2a;
+    border: 2px solid #444;
+    border-radius: 6px;
+    color: white;
+    padding: 10px 14px;
+    font-size: 16px;
+    width: 140px;
+    text-align: center;
+    font-family: monospace;
+}
+#time-input:focus {
+    outline: none;
+    border-color: #B71C1C;
+}
+#time-input::placeholder {
+    color: #666;
+}
+
+button {
+    background: #B71C1C;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+button:hover { background: #d32f2f; }
+button:disabled { background: #555; cursor: not-allowed; }
+
+.video-container {
+    width: 100%;
+    max-width: 800px;
+}
+
+video {
+    width: 100%;
+    border-radius: 8px;
+    background: #000;
+}
+
+.current-time {
+    margin-top: 10px;
+    font-family: monospace;
+    font-size: 14px;
+    color: #aaa;
+    text-align: center;
+}
+
+.url-controls {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 8px;
+}
+
+#url-input {
+    flex: 1;
+    background: #2a2a2a;
+    border: 2px solid #444;
+    border-radius: 6px;
+    color: white;
+    padding: 10px 14px;
+    font-size: 14px;
+}
+#url-input:focus {
+    outline: none;
+    border-color: #B71C1C;
+}
+#url-input::placeholder { color: #666; }
+
+.drop-zone {
+    width: 100%;
+    max-width: 800px;
+    border: 2px dashed #555;
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 8px;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
+}
+.drop-zone.dragover {
+    border-color: #B71C1C;
+    background: rgba(183, 28, 28, 0.1);
+    color: #ef9a9a;
+}
+
+/* Speed controls */
+.speed-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.speed-controls span {
+    font-size: 13px;
+    color: #aaa;
+    margin-right: 4px;
+}
+
+.speed-btn {
+    background: #2a2a2a;
+    border: 2px solid #444;
+    color: #ccc;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.speed-btn:hover { background: #333; border-color: #666; }
+.speed-btn.active {
+    background: #B71C1C;
+    border-color: #B71C1C;
+    color: white;
+}
+
+/* Timer section */
+.timer-section {
+    width: 100%;
+    max-width: 800px;
+    background: #2a2a2a;
+    border: 2px solid #444;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 16px;
+    text-align: center;
+}
+
+.timer-section h2 {
+    font-size: 15px;
+    color: #aaa;
+    margin-bottom: 14px;
+    font-weight: normal;
+}
+
+.timer-display {
+    font-family: monospace;
+    font-size: 48px;
+    font-weight: bold;
+    color: #ef9a9a;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    min-height: 60px;
+    line-height: 1;
+}
+
+.timer-display.running {
+    color: #a5d6a7;
+}
+
+.timer-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+#start-btn {
+    background: #1b5e20;
+    font-size: 16px;
+    padding: 12px 28px;
+}
+#start-btn:hover { background: #2e7d32; }
+#start-btn:disabled { background: #555; }
+
+#stop-btn {
+    background: #b71c1c;
+    font-size: 16px;
+    padding: 12px 28px;
+}
+#stop-btn:hover { background: #d32f2f; }
+#stop-btn:disabled { background: #555; }
+
+#reset-btn {
+    background: #37474f;
+    font-size: 16px;
+    padding: 12px 24px;
+}
+#reset-btn:hover { background: #455a64; }
+
+.timer-results {
+    margin-top: 14px;
+    font-size: 13px;
+    color: #aaa;
+    font-family: monospace;
+    line-height: 1.8;
+}
+
+.timer-results .result-line {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+.timer-results .result-line:nth-child(odd) {
+    background: #333;
+}
+
+.timer-hint {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #555;
+}
+
+.notes-container {
+    width: 100%;
+    max-width: 800px;
+    margin-top: 16px;
+}
+
+.notes-container label {
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 6px;
+    display: block;
+}
+
+#notes {
+    width: 100%;
+    background: #2a2a2a;
+    border: 2px solid #444;
+    border-radius: 6px;
+    color: white;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    resize: vertical;
+    overflow-y: auto;
+}
+#notes:focus {
+    outline: none;
+    border-color: #B71C1C;
+}
+#notes::placeholder { color: #666; }
+    </style>
+</head>
+<body>
+
+<h1>Video Timer — Route Timing</h1>
+
+<div class="url-controls">
+    <input type="text" id="url-input" placeholder="Paste video URL...">
+    <button id="load-url-btn">Load URL</button>
+</div>
+
+<div class="drop-zone" id="drop-zone">Drop video file here</div>
+
+<div class="controls">
+    <label class="file-label" for="file-input">Choose File</label>
+    <input type="file" id="file-input" accept="video/*">
+    <input type="text" id="time-input" placeholder="1:30 or 90">
+    <button id="jump-btn" disabled>Jump</button>
+    <button id="minus5-btn" disabled>-5s</button>
+    <button id="plus5-btn" disabled>+5s</button>
+    <button id="pause-btn" disabled>Pause</button>
+</div>
+
+<div class="speed-controls">
+    <span>Speed:</span>
+    <button class="speed-btn" data-speed="0.25">0.25x</button>
+    <button class="speed-btn active" data-speed="0.5">0.5x</button>
+    <button class="speed-btn" data-speed="0.75">0.75x</button>
+    <button class="speed-btn" data-speed="1">1x</button>
+    <button class="speed-btn" data-speed="1.5">1.5x</button>
+    <button class="speed-btn" data-speed="2">2x</button>
+</div>
+
+<div class="video-container">
+    <video id="video" controls></video>
+    <div class="current-time" id="current-time"></div>
+</div>
+
+<div class="timer-section">
+    <h2>Route Timer — measures elapsed video time between Start and Stop</h2>
+    <div class="timer-display" id="timer-display">0.00s</div>
+    <div class="timer-buttons">
+        <button id="start-btn" disabled>Start</button>
+        <button id="stop-btn" disabled>Stop</button>
+        <button id="reset-btn">Reset</button>
+    </div>
+    <div class="timer-results" id="timer-results"></div>
+    <div class="timer-hint">
+        Tip: slow to 0.5x to see the route clearly — the timer records actual video time, not wall-clock time.
+    </div>
+</div>
+
+<div class="notes-container">
+    <label for="notes">Notes</label>
+    <textarea id="notes" rows="8" placeholder="Paste timed results here or take notes..."></textarea>
+</div>
+
+<script>
+const video = document.getElementById('video');
+const fileInput = document.getElementById('file-input');
+const timeInput = document.getElementById('time-input');
+const jumpBtn = document.getElementById('jump-btn');
+const currentTimeEl = document.getElementById('current-time');
+const urlInput = document.getElementById('url-input');
+const loadUrlBtn = document.getElementById('load-url-btn');
+const dropZone = document.getElementById('drop-zone');
+const timerDisplay = document.getElementById('timer-display');
+const timerResults = document.getElementById('timer-results');
+const startBtn = document.getElementById('start-btn');
+const stopBtn = document.getElementById('stop-btn');
+const resetBtn = document.getElementById('reset-btn');
+const notes = document.getElementById('notes');
+
+// ── Speed controls ──────────────────────────────────────────────
+let currentSpeed = 0.5;
+video.playbackRate = currentSpeed;
+
+document.querySelectorAll('.speed-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        currentSpeed = parseFloat(btn.dataset.speed);
+        video.playbackRate = currentSpeed;
+        document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    });
+});
+
+// Re-apply speed on play (browser may reset it)
+video.addEventListener('play', () => { video.playbackRate = currentSpeed; });
+
+// ── Timer state ─────────────────────────────────────────────────
+let timerStartVideoTime = null;
+let timerRunning = false;
+let laps = [];
+
+function formatDuration(seconds) {
+    return seconds.toFixed(2) + 's';
+}
+
+function updateTimerDisplay() {
+    if (!timerRunning || timerStartVideoTime === null) return;
+    const elapsed = video.currentTime - timerStartVideoTime;
+    timerDisplay.textContent = formatDuration(Math.max(0, elapsed));
+}
+
+video.addEventListener('timeupdate', () => {
+    currentTimeEl.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration || 0);
+    if (timerRunning) updateTimerDisplay();
+});
+
+startBtn.addEventListener('click', () => {
+    timerStartVideoTime = video.currentTime;
+    timerRunning = true;
+    timerDisplay.classList.add('running');
+    timerDisplay.textContent = '0.00s';
+    stopBtn.disabled = false;
+    startBtn.disabled = true;
+    if (video.paused) video.play();
+});
+
+stopBtn.addEventListener('click', () => {
+    if (!timerRunning) return;
+    const elapsed = video.currentTime - timerStartVideoTime;
+    timerRunning = false;
+    timerDisplay.classList.remove('running');
+    timerDisplay.textContent = formatDuration(Math.max(0, elapsed));
+
+    const lapNum = laps.length + 1;
+    laps.push({
+        num: lapNum,
+        start: timerStartVideoTime,
+        end: video.currentTime,
+        duration: Math.max(0, elapsed)
+    });
+
+    renderResults();
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+});
+
+resetBtn.addEventListener('click', () => {
+    timerRunning = false;
+    timerStartVideoTime = null;
+    timerDisplay.classList.remove('running');
+    timerDisplay.textContent = '0.00s';
+    laps = [];
+    timerResults.innerHTML = '';
+    startBtn.disabled = video.readyState === 0;
+    stopBtn.disabled = true;
+});
+
+function renderResults() {
+    if (laps.length === 0) { timerResults.innerHTML = ''; return; }
+    let html = '';
+    laps.forEach(lap => {
+        html += `<div class="result-line">
+            <span>#${lap.num} &nbsp; ${formatTime(lap.start)} → ${formatTime(lap.end)}</span>
+            <span><strong>${formatDuration(lap.duration)}</strong></span>
+        </div>`;
+    });
+    // Append to notes button
+    html += `<div style="margin-top:10px; text-align:right;">
+        <button onclick="appendToNotes()" style="font-size:12px; padding:6px 12px; background:#37474f;">Copy to Notes</button>
+    </div>`;
+    timerResults.innerHTML = html;
+}
+
+function appendToNotes() {
+    const lines = laps.map(l => `#${l.num} ${formatTime(l.start)}–${formatTime(l.end)} = ${formatDuration(l.duration)}`).join('\n');
+    notes.value = notes.value ? notes.value + '\n' + lines : lines;
+}
+
+// ── Video loading ───────────────────────────────────────────────
+function loadVideo() {
+    jumpBtn.disabled = false;
+    document.getElementById('minus5-btn').disabled = false;
+    document.getElementById('plus5-btn').disabled = false;
+    document.getElementById('pause-btn').disabled = false;
+    startBtn.disabled = false;
+    video.playbackRate = currentSpeed;
+}
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+});
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+});
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('video/')) {
+        video.src = URL.createObjectURL(file);
+        video.load();
+        loadVideo();
+        dropZone.textContent = file.name;
+    }
+});
+dropZone.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    video.src = URL.createObjectURL(file);
+    video.load();
+    loadVideo();
+    dropZone.textContent = file.name;
+});
+
+loadUrlBtn.addEventListener('click', () => {
+    const url = urlInput.value.trim();
+    if (!url) return;
+    video.src = url;
+    video.load();
+    loadVideo();
+});
+
+urlInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') loadUrlBtn.click();
+});
+
+// ── Time parsing / formatting ────────────────────────────────────
+function parseTime(str) {
+    str = str.trim();
+    if (!str) return null;
+    const parts = str.split(':');
+    if (parts.length === 1) {
+        const s = parseFloat(parts[0]);
+        return isNaN(s) ? null : s;
+    }
+    if (parts.length === 2) {
+        const m = parseInt(parts[0], 10);
+        const s = parseFloat(parts[1]);
+        if (isNaN(m) || isNaN(s)) return null;
+        return m * 60 + s;
+    }
+    if (parts.length === 3) {
+        const h = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        const s = parseFloat(parts[2]);
+        if (isNaN(h) || isNaN(m) || isNaN(s)) return null;
+        return h * 3600 + m * 60 + s;
+    }
+    return null;
+}
+
+function formatTime(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function jumpToTime() {
+    const seconds = parseTime(timeInput.value);
+    if (seconds === null) return;
+    video.currentTime = seconds;
+    video.play();
+}
+
+jumpBtn.addEventListener('click', jumpToTime);
+timeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') jumpToTime(); });
+
+document.getElementById('minus5-btn').addEventListener('click', () => {
+    video.currentTime = Math.max(0, video.currentTime - 5);
+    video.play();
+});
+
+document.getElementById('plus5-btn').addEventListener('click', () => {
+    video.currentTime = video.currentTime + 5;
+    video.play();
+});
+
+document.getElementById('pause-btn').addEventListener('click', () => {
+    if (video.paused) { video.play(); } else { video.pause(); }
+});
+</script>
+
+</body>
+</html>
