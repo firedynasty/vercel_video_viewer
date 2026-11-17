@@ -1,2 +1,10 @@
 .DS_Store
 .vercel/
+__pycache__/
+# video transcript player: media and per-video data stay local
+video_transcript_player/workflow/*.mp4
+video_transcript_player/workflow/*.mp3
+video_transcript_player/workflow/*.srt
+video_transcript_player/youtube/
+video_transcript_player/chinese/
+public/video_library.json
