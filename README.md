@@ -1,18 +1,26 @@
 # vercel_video_viewer
 
-Video viewer with dynamic category playlists loaded from Dropbox-hosted JSON.
+Video transcript player: a YouTube video or local file, with bilingual subtitles and word-by-word gloss cards (pinyin, Mandarin and Cantonese speech).
 
-## How it works
+- `public/video_transcript_player.html`: the player (served at `/`)
+- `public/worksheet.html` and `public/worksheets/`: practice worksheets made from transcripts (served at `/worksheet`)
+- `video_transcript_player/workflow/`: scripts that make the subtitles and glosses
 
-1. The page loads `playlists.json` from Dropbox via a serverless CORS proxy
-2. Each key in the JSON becomes a navbar button
-3. Clicking a button loads that category's videos into the gallery
+## Workflow
 
-## Updating playlists
+Run from `video_transcript_player/workflow/`:
 
-1. Edit `.txt` files in `playlists/` (format: `name, URL` per line, or just URLs)
-2. Run `python3 generate_playlists.py`
-3. Upload/replace `playlists.json` to **Dropbox > vercel > playlists.json**
-   - Dropbox path: https://www.dropbox.com/home/vercel
-   - Overwrite the same file so the share link stays the same
-4. No redeploy needed — the site fetches the latest JSON from Dropbox
+```bash
+# 1. Audio to SRTs (Whisper + English). Writes ../youtube/<ID>/<ID>_zh.srt, _en.srt, _zh_en.srt
+./run_transcribe_sermon_mandarin.sh "<audio file>" [<ID>] [-y]
+
+# 2. Optional: shift the times if the audio was trimmed (e.g. starts at 21:00). Writes *_shifted.srt
+python3 shift_srt.py -d 21 ../youtube/<ID>/<ID>_zh.srt ../youtube/<ID>/<ID>_en.srt ../youtube/<ID>/<ID>_zh_en.srt
+
+# 3. Gloss (needs OPENAI_API_KEY). Writes <name>.gloss.json next to the SRT
+./run_gloss.sh <ID>
+```
+
+In the player, click **+ Gloss** and load the `.gloss.json`. The YouTube video embeds automatically. Press **G** to open the gloss card.
+
+`video_transcript_player/youtube/` (SRTs, audio, gloss files) is gitignored and stays local.
